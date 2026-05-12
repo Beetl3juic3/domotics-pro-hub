@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ObrasIndexRouteImport } from './routes/obras.index'
+import { Route as ObrasIdRouteImport } from './routes/obras.$id'
 import { Route as ObrasIdIndexRouteImport } from './routes/obras.$id.index'
 import { Route as ObrasIdApartamentosAptIdRouteImport } from './routes/obras.$id.apartamentos.$aptId'
 
@@ -30,10 +31,15 @@ const ObrasIndexRoute = ObrasIndexRouteImport.update({
   path: '/obras/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ObrasIdIndexRoute = ObrasIdIndexRouteImport.update({
-  id: '/obras/$id/',
-  path: '/obras/$id/',
+const ObrasIdRoute = ObrasIdRouteImport.update({
+  id: '/obras/$id',
+  path: '/obras/$id',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ObrasIdIndexRoute = ObrasIdIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ObrasIdRoute,
 } as any)
 const ObrasIdApartamentosAptIdRoute =
   ObrasIdApartamentosAptIdRouteImport.update({
@@ -45,6 +51,7 @@ const ObrasIdApartamentosAptIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/obras/$id': typeof ObrasIdRouteWithChildren
   '/obras/': typeof ObrasIndexRoute
   '/obras/$id/': typeof ObrasIdIndexRoute
   '/obras/$id/apartamentos/$aptId': typeof ObrasIdApartamentosAptIdRoute
@@ -60,6 +67,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/obras/$id': typeof ObrasIdRouteWithChildren
   '/obras/': typeof ObrasIndexRoute
   '/obras/$id/': typeof ObrasIdIndexRoute
   '/obras/$id/apartamentos/$aptId': typeof ObrasIdApartamentosAptIdRoute
@@ -69,6 +77,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/obras/$id'
     | '/obras/'
     | '/obras/$id/'
     | '/obras/$id/apartamentos/$aptId'
@@ -83,6 +92,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/login'
+    | '/obras/$id'
     | '/obras/'
     | '/obras/$id/'
     | '/obras/$id/apartamentos/$aptId'
@@ -91,8 +101,8 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
+  ObrasIdRoute: typeof ObrasIdRouteWithChildren
   ObrasIndexRoute: typeof ObrasIndexRoute
-  ObrasIdIndexRoute: typeof ObrasIdIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -118,12 +128,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ObrasIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/obras/$id': {
+      id: '/obras/$id'
+      path: '/obras/$id'
+      fullPath: '/obras/$id'
+      preLoaderRoute: typeof ObrasIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/obras/$id/': {
       id: '/obras/$id/'
-      path: '/obras/$id'
+      path: '/'
       fullPath: '/obras/$id/'
       preLoaderRoute: typeof ObrasIdIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ObrasIdRoute
     }
     '/obras/$id/apartamentos/$aptId': {
       id: '/obras/$id/apartamentos/$aptId'
@@ -135,11 +152,24 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface ObrasIdRouteChildren {
+  ObrasIdIndexRoute: typeof ObrasIdIndexRoute
+  ObrasIdApartamentosAptIdRoute: typeof ObrasIdApartamentosAptIdRoute
+}
+
+const ObrasIdRouteChildren: ObrasIdRouteChildren = {
+  ObrasIdIndexRoute: ObrasIdIndexRoute,
+  ObrasIdApartamentosAptIdRoute: ObrasIdApartamentosAptIdRoute,
+}
+
+const ObrasIdRouteWithChildren =
+  ObrasIdRoute._addFileChildren(ObrasIdRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
+  ObrasIdRoute: ObrasIdRouteWithChildren,
   ObrasIndexRoute: ObrasIndexRoute,
-  ObrasIdIndexRoute: ObrasIdIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

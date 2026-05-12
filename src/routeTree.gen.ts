@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ObrasIndexRouteImport } from './routes/obras.index'
+import { Route as ObrasIdRouteImport } from './routes/obras.$id'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -28,34 +29,43 @@ const ObrasIndexRoute = ObrasIndexRouteImport.update({
   path: '/obras/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ObrasIdRoute = ObrasIdRouteImport.update({
+  id: '/obras/$id',
+  path: '/obras/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/obras/$id': typeof ObrasIdRoute
   '/obras/': typeof ObrasIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/obras/$id': typeof ObrasIdRoute
   '/obras': typeof ObrasIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/obras/$id': typeof ObrasIdRoute
   '/obras/': typeof ObrasIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/obras/'
+  fullPaths: '/' | '/login' | '/obras/$id' | '/obras/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/obras'
-  id: '__root__' | '/' | '/login' | '/obras/'
+  to: '/' | '/login' | '/obras/$id' | '/obras'
+  id: '__root__' | '/' | '/login' | '/obras/$id' | '/obras/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
+  ObrasIdRoute: typeof ObrasIdRoute
   ObrasIndexRoute: typeof ObrasIndexRoute
 }
 
@@ -82,12 +92,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ObrasIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/obras/$id': {
+      id: '/obras/$id'
+      path: '/obras/$id'
+      fullPath: '/obras/$id'
+      preLoaderRoute: typeof ObrasIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
+  ObrasIdRoute: ObrasIdRoute,
   ObrasIndexRoute: ObrasIndexRoute,
 }
 export const routeTree = rootRouteImport

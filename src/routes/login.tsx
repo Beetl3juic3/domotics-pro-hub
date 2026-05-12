@@ -57,7 +57,7 @@ function LoginPage() {
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
             <Cpu className="h-6 w-6" />
           </div>
-          <CardTitle className="text-2xl">Domótica · Técnicos</CardTitle>
+          <CardTitle className="text-2xl">Smarthome SPNOS</CardTitle>
           <CardDescription>Acede à tua área de obras e checklists</CardDescription>
         </CardHeader>
         <CardContent>

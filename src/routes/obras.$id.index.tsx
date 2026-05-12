@@ -13,7 +13,7 @@ import { estadoBadgeClass, estadoLabel, type Estado } from "@/lib/obra-utils";
 type Obra = { id: string; nome: string };
 type Apartamento = { id: string; nome: string; estado: Estado; updated_at: string };
 
-export const Route = createFileRoute("/obras/$id")({
+export const Route = createFileRoute("/obras/$id/")({
   component: ObraDetail,
 });
 

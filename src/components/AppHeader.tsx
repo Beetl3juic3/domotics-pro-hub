@@ -12,7 +12,7 @@ export function AppHeader() {
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <Cpu className="h-4 w-4" />
           </span>
-          Domótica
+          Smarthome SPNOS
         </Link>
         <div className="flex items-center gap-3">
           <span className="hidden text-sm text-muted-foreground sm:inline">{user?.email}</span>

@@ -81,6 +81,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Smarthome SPNOS · Gestão de Obras" },
+      { name: "twitter:description", content: "Smarthome SPNOS - App para técnicos gerirem obras e checklists." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f8689c4b-da1a-46a7-ba3f-434f187e77cd/id-preview-ccb799cd--64493eff-c835-4797-a61c-65dd837f01e8.lovable.app-1778617230351.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f8689c4b-da1a-46a7-ba3f-434f187e77cd/id-preview-ccb799cd--64493eff-c835-4797-a61c-65dd837f01e8.lovable.app-1778617230351.png" },
     ],
     links: [
       {

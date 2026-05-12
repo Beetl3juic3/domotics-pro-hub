@@ -19,6 +19,7 @@ function LoginPage() {
   const { user, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [nome, setNome] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -40,7 +41,10 @@ function LoginPage() {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: window.location.origin },
+      options: {
+        emailRedirectTo: window.location.origin,
+        data: { nome: nome.trim() || email.split("@")[0] },
+      },
     });
     setBusy(false);
     if (error) toast.error(error.message);
@@ -77,6 +81,7 @@ function LoginPage() {
             </TabsContent>
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4 pt-4">
+                <Field id="nome-up" label="Nome" type="text" value={nome} onChange={setNome} />
                 <Field id="email-up" label="Email" type="email" value={email} onChange={setEmail} />
                 <Field id="pw-up" label="Palavra-passe" type="password" value={password} onChange={setPassword} />
                 <Button type="submit" className="w-full" disabled={busy}>

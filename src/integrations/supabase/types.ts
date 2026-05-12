@@ -19,6 +19,8 @@ export type Database = {
           created_at: string
           estado: Database["public"]["Enums"]["obra_estado"]
           id: string
+          modificado_em: string
+          modificado_por: string | null
           nome: string
           obra_id: string
           updated_at: string
@@ -27,6 +29,8 @@ export type Database = {
           created_at?: string
           estado?: Database["public"]["Enums"]["obra_estado"]
           id?: string
+          modificado_em?: string
+          modificado_por?: string | null
           nome: string
           obra_id: string
           updated_at?: string
@@ -35,6 +39,8 @@ export type Database = {
           created_at?: string
           estado?: Database["public"]["Enums"]["obra_estado"]
           id?: string
+          modificado_em?: string
+          modificado_por?: string | null
           nome?: string
           obra_id?: string
           updated_at?: string
@@ -56,6 +62,8 @@ export type Database = {
           created_at: string
           descricao: string
           id: string
+          modificado_em: string
+          modificado_por: string | null
           ordem: number
         }
         Insert: {
@@ -64,6 +72,8 @@ export type Database = {
           created_at?: string
           descricao: string
           id?: string
+          modificado_em?: string
+          modificado_por?: string | null
           ordem?: number
         }
         Update: {
@@ -72,6 +82,8 @@ export type Database = {
           created_at?: string
           descricao?: string
           id?: string
+          modificado_em?: string
+          modificado_por?: string | null
           ordem?: number
         }
         Relationships: [
@@ -88,6 +100,8 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          modificado_em: string
+          modificado_por: string | null
           nome: string
           updated_at: string
           user_id: string
@@ -95,6 +109,8 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          modificado_em?: string
+          modificado_por?: string | null
           nome: string
           updated_at?: string
           user_id: string
@@ -102,6 +118,32 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          modificado_em?: string
+          modificado_por?: string | null
+          nome?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          nome: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          nome: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
           nome?: string
           updated_at?: string
           user_id?: string

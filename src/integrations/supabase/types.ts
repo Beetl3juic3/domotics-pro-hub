@@ -14,34 +14,34 @@ export type Database = {
   }
   public: {
     Tables: {
-      checklist_items: {
+      apartamentos: {
         Row: {
-          concluido: boolean
           created_at: string
-          descricao: string
+          estado: Database["public"]["Enums"]["obra_estado"]
           id: string
+          nome: string
           obra_id: string
-          ordem: number
+          updated_at: string
         }
         Insert: {
-          concluido?: boolean
           created_at?: string
-          descricao: string
+          estado?: Database["public"]["Enums"]["obra_estado"]
           id?: string
+          nome: string
           obra_id: string
-          ordem?: number
+          updated_at?: string
         }
         Update: {
-          concluido?: boolean
           created_at?: string
-          descricao?: string
+          estado?: Database["public"]["Enums"]["obra_estado"]
           id?: string
+          nome?: string
           obra_id?: string
-          ordem?: number
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "checklist_items_obra_id_fkey"
+            foreignKeyName: "apartamentos_obra_id_fkey"
             columns: ["obra_id"]
             isOneToOne: false
             referencedRelation: "obras"
@@ -49,28 +49,60 @@ export type Database = {
           },
         ]
       }
+      checklist_items: {
+        Row: {
+          apartamento_id: string
+          concluido: boolean
+          created_at: string
+          descricao: string
+          id: string
+          ordem: number
+        }
+        Insert: {
+          apartamento_id: string
+          concluido?: boolean
+          created_at?: string
+          descricao: string
+          id?: string
+          ordem?: number
+        }
+        Update: {
+          apartamento_id?: string
+          concluido?: boolean
+          created_at?: string
+          descricao?: string
+          id?: string
+          ordem?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklist_items_apartamento_id_fkey"
+            columns: ["apartamento_id"]
+            isOneToOne: false
+            referencedRelation: "apartamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       obras: {
         Row: {
-          apartamento: string
           created_at: string
-          estado: Database["public"]["Enums"]["obra_estado"]
           id: string
+          nome: string
           updated_at: string
           user_id: string
         }
         Insert: {
-          apartamento: string
           created_at?: string
-          estado?: Database["public"]["Enums"]["obra_estado"]
           id?: string
+          nome: string
           updated_at?: string
           user_id: string
         }
         Update: {
-          apartamento?: string
           created_at?: string
-          estado?: Database["public"]["Enums"]["obra_estado"]
           id?: string
+          nome?: string
           updated_at?: string
           user_id?: string
         }

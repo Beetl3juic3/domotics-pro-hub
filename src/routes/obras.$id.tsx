@@ -6,14 +6,12 @@ import { AppHeader } from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Loader2, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, ChevronRight, DoorOpen, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
-import { ESTADOS, type Estado } from "@/lib/obra-utils";
+import { estadoBadgeClass, estadoLabel, type Estado } from "@/lib/obra-utils";
 
-type Obra = { id: string; apartamento: string; estado: Estado };
-type Item = { id: string; descricao: string; concluido: boolean; ordem: number };
+type Obra = { id: string; nome: string };
+type Apartamento = { id: string; nome: string; estado: Estado; updated_at: string };
 
 export const Route = createFileRoute("/obras/$id")({
   component: ObraDetail,
@@ -23,63 +21,45 @@ function ObraDetail() {
   const { id } = Route.useParams();
   const { user, loading } = useAuth();
   const [obra, setObra] = useState<Obra | null>(null);
-  const [items, setItems] = useState<Item[]>([]);
+  const [apartamentos, setApartamentos] = useState<Apartamento[] | null>(null);
   const [novo, setNovo] = useState("");
-  const [carregando, setCarregando] = useState(true);
+  const [criando, setCriando] = useState(false);
 
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const [{ data: o, error: e1 }, { data: it, error: e2 }] = await Promise.all([
-        supabase.from("obras").select("id, apartamento, estado").eq("id", id).maybeSingle(),
-        supabase.from("checklist_items").select("id, descricao, concluido, ordem").eq("obra_id", id).order("ordem"),
+      const [{ data: o, error: e1 }, { data: a, error: e2 }] = await Promise.all([
+        supabase.from("obras").select("id, nome").eq("id", id).maybeSingle(),
+        supabase
+          .from("apartamentos")
+          .select("id, nome, estado, updated_at")
+          .eq("obra_id", id)
+          .order("created_at"),
       ]);
       if (e1) toast.error(e1.message);
       if (e2) toast.error(e2.message);
       setObra((o as Obra) ?? null);
-      setItems((it as Item[]) ?? []);
-      setCarregando(false);
+      setApartamentos((a ?? []) as Apartamento[]);
     })();
   }, [id, user]);
 
   if (loading) return null;
   if (!user) return <Navigate to="/login" />;
 
-  async function alterarEstado(estado: Estado) {
-    if (!obra) return;
-    setObra({ ...obra, estado });
-    const { error } = await supabase.from("obras").update({ estado }).eq("id", obra.id);
-    if (error) toast.error(error.message);
-  }
-
-  async function adicionarItem(e: React.FormEvent) {
+  async function criarApartamento(e: React.FormEvent) {
     e.preventDefault();
     if (!novo.trim()) return;
-    const ordem = items.length;
+    setCriando(true);
     const { data, error } = await supabase
-      .from("checklist_items")
-      .insert({ obra_id: id, descricao: novo.trim(), ordem })
-      .select("id, descricao, concluido, ordem")
+      .from("apartamentos")
+      .insert({ obra_id: id, nome: novo.trim() })
+      .select("id, nome, estado, updated_at")
       .single();
+    setCriando(false);
     if (error) return toast.error(error.message);
-    setItems([...items, data as Item]);
+    setApartamentos((arr) => [...(arr ?? []), data as Apartamento]);
     setNovo("");
   }
-
-  async function toggleItem(item: Item) {
-    const concluido = !item.concluido;
-    setItems((arr) => arr.map((i) => (i.id === item.id ? { ...i, concluido } : i)));
-    const { error } = await supabase.from("checklist_items").update({ concluido }).eq("id", item.id);
-    if (error) toast.error(error.message);
-  }
-
-  async function removerItem(item: Item) {
-    setItems((arr) => arr.filter((i) => i.id !== item.id));
-    const { error } = await supabase.from("checklist_items").delete().eq("id", item.id);
-    if (error) toast.error(error.message);
-  }
-
-  const concluidos = items.filter((i) => i.concluido).length;
 
   return (
     <div className="min-h-screen bg-background">
@@ -92,7 +72,7 @@ function ObraDetail() {
           <ArrowLeft className="h-4 w-4" /> Todas as obras
         </Link>
 
-        {carregando ? (
+        {obra === null && apartamentos === null ? (
           <div className="flex justify-center py-12">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
@@ -100,76 +80,61 @@ function ObraDetail() {
           <Card className="p-8 text-center text-muted-foreground">Obra não encontrada.</Card>
         ) : (
           <>
-            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h1 className="text-3xl font-bold tracking-tight">{obra.apartamento}</h1>
-                <p className="text-sm text-muted-foreground">
-                  {concluidos} / {items.length} tarefas concluídas
-                </p>
-              </div>
-              <Select value={obra.estado} onValueChange={(v) => alterarEstado(v as Estado)}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {ESTADOS.map((e) => (
-                    <SelectItem key={e.value} value={e.value}>{e.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="mb-6">
+              <h1 className="text-3xl font-bold tracking-tight">{obra.nome}</h1>
+              <p className="text-sm text-muted-foreground">
+                {(apartamentos ?? []).length} apartamento(s)
+              </p>
             </div>
 
-            <Card className="p-4">
-              <h2 className="mb-3 text-lg font-semibold">Checklist</h2>
-              <form onSubmit={adicionarItem} className="mb-4 flex gap-2">
+            <Card className="mb-6 p-4">
+              <form onSubmit={criarApartamento} className="flex flex-col gap-3 sm:flex-row">
                 <Input
-                  placeholder="Adicionar tarefa..."
+                  placeholder="Nome do apartamento (ex: Bloco A · 3ºD)"
                   value={novo}
                   onChange={(e) => setNovo(e.target.value)}
-                  maxLength={200}
+                  maxLength={120}
                 />
-                <Button type="submit" size="icon" disabled={!novo.trim()}>
-                  <Plus className="h-4 w-4" />
+                <Button type="submit" disabled={criando || !novo.trim()}>
+                  {criando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
+                  Novo apartamento
                 </Button>
               </form>
-
-              {items.length === 0 ? (
-                <p className="py-6 text-center text-sm text-muted-foreground">
-                  Sem tarefas. Adiciona a primeira acima.
-                </p>
-              ) : (
-                <ul className="space-y-1">
-                  {items.map((it) => (
-                    <li
-                      key={it.id}
-                      className="group flex items-center gap-3 rounded-md px-2 py-2 hover:bg-muted"
-                    >
-                      <Checkbox
-                        checked={it.concluido}
-                        onCheckedChange={() => toggleItem(it)}
-                        id={`it-${it.id}`}
-                      />
-                      <label
-                        htmlFor={`it-${it.id}`}
-                        className={`flex-1 cursor-pointer text-sm ${
-                          it.concluido ? "text-muted-foreground line-through" : ""
-                        }`}
-                      >
-                        {it.descricao}
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => removerItem(it)}
-                        className="opacity-0 transition group-hover:opacity-100"
-                        aria-label="Remover"
-                      >
-                        <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
             </Card>
+
+            {(apartamentos ?? []).length === 0 ? (
+              <Card className="p-10 text-center text-muted-foreground">
+                <DoorOpen className="mx-auto mb-3 h-10 w-10 opacity-40" />
+                Adiciona o primeiro apartamento desta obra.
+              </Card>
+            ) : (
+              <ul className="space-y-3">
+                {(apartamentos ?? []).map((a) => (
+                  <li key={a.id}>
+                    <Link
+                      to="/obras/$id/apartamentos/$aptId"
+                      params={{ id, aptId: a.id }}
+                      className="block"
+                    >
+                      <Card className="flex items-center justify-between p-4 transition hover:shadow-md">
+                        <div className="flex items-center gap-3">
+                          <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
+                            <DoorOpen className="h-5 w-5 text-secondary-foreground" />
+                          </span>
+                          <div className="font-medium">{a.nome}</div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className={`rounded-full px-3 py-1 text-xs font-medium ${estadoBadgeClass(a.estado)}`}>
+                            {estadoLabel(a.estado)}
+                          </span>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      </Card>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
           </>
         )}
       </main>

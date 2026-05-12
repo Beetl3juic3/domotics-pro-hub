@@ -14,7 +14,68 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      checklist_items: {
+        Row: {
+          concluido: boolean
+          created_at: string
+          descricao: string
+          id: string
+          obra_id: string
+          ordem: number
+        }
+        Insert: {
+          concluido?: boolean
+          created_at?: string
+          descricao: string
+          id?: string
+          obra_id: string
+          ordem?: number
+        }
+        Update: {
+          concluido?: boolean
+          created_at?: string
+          descricao?: string
+          id?: string
+          obra_id?: string
+          ordem?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklist_items_obra_id_fkey"
+            columns: ["obra_id"]
+            isOneToOne: false
+            referencedRelation: "obras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      obras: {
+        Row: {
+          apartamento: string
+          created_at: string
+          estado: Database["public"]["Enums"]["obra_estado"]
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          apartamento: string
+          created_at?: string
+          estado?: Database["public"]["Enums"]["obra_estado"]
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          apartamento?: string
+          created_at?: string
+          estado?: Database["public"]["Enums"]["obra_estado"]
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +84,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      obra_estado: "pendente" | "em_curso" | "concluida"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +211,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      obra_estado: ["pendente", "em_curso", "concluida"],
+    },
   },
 } as const

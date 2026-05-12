@@ -9,9 +9,10 @@ import { Card } from "@/components/ui/card";
 import { ArrowLeft, ChevronRight, DoorOpen, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { estadoBadgeClass, estadoLabel, type Estado } from "@/lib/obra-utils";
+import { getNomes, formatModificado } from "@/lib/profiles";
 
 type Obra = { id: string; nome: string };
-type Apartamento = { id: string; nome: string; estado: Estado; updated_at: string };
+type Apartamento = { id: string; nome: string; estado: Estado; modificado_em: string | null; modificado_por: string | null };
 
 export const Route = createFileRoute("/obras/$id/")({
   component: ObraDetail,
@@ -22,6 +23,7 @@ function ObraDetail() {
   const { user, loading } = useAuth();
   const [obra, setObra] = useState<Obra | null>(null);
   const [apartamentos, setApartamentos] = useState<Apartamento[] | null>(null);
+  const [nomes, setNomes] = useState<Map<string, string>>(new Map());
   const [novo, setNovo] = useState("");
   const [criando, setCriando] = useState(false);
 
@@ -32,14 +34,16 @@ function ObraDetail() {
         supabase.from("obras").select("id, nome").eq("id", id).maybeSingle(),
         supabase
           .from("apartamentos")
-          .select("id, nome, estado, updated_at")
+          .select("id, nome, estado, modificado_em, modificado_por")
           .eq("obra_id", id)
           .order("created_at"),
       ]);
       if (e1) toast.error(e1.message);
       if (e2) toast.error(e2.message);
       setObra((o as Obra) ?? null);
-      setApartamentos((a ?? []) as Apartamento[]);
+      const list = (a ?? []) as Apartamento[];
+      setApartamentos(list);
+      setNomes(await getNomes(list.map((x) => x.modificado_por)));
     })();
   }, [id, user]);
 
@@ -53,11 +57,13 @@ function ObraDetail() {
     const { data, error } = await supabase
       .from("apartamentos")
       .insert({ obra_id: id, nome: novo.trim() })
-      .select("id, nome, estado, updated_at")
+      .select("id, nome, estado, modificado_em, modificado_por")
       .single();
     setCriando(false);
     if (error) return toast.error(error.message);
-    setApartamentos((arr) => [...(arr ?? []), data as Apartamento]);
+    const novoApt = data as Apartamento;
+    setApartamentos((arr) => [...(arr ?? []), novoApt]);
+    setNomes(await getNomes([novoApt.modificado_por, ...(apartamentos ?? []).map((x) => x.modificado_por)]));
     setNovo("");
   }
 
@@ -121,7 +127,14 @@ function ObraDetail() {
                           <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
                             <DoorOpen className="h-5 w-5 text-secondary-foreground" />
                           </span>
-                          <div className="font-medium">{a.nome}</div>
+                          <div>
+                            <div className="font-medium">{a.nome}</div>
+                            {a.modificado_em && (
+                              <div className="text-xs text-muted-foreground">
+                                {formatModificado(a.modificado_por ? nomes.get(a.modificado_por) : undefined, a.modificado_em)}
+                              </div>
+                            )}
+                          </div>
                         </div>
                         <div className="flex items-center gap-3">
                           <span className={`rounded-full px-3 py-1 text-xs font-medium ${estadoBadgeClass(a.estado)}`}>

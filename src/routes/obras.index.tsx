@@ -8,8 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Building2, ChevronRight, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { getNomes, formatModificado } from "@/lib/profiles";
 
-type Obra = { id: string; nome: string; updated_at: string };
+type Obra = { id: string; nome: string; modificado_em: string | null; modificado_por: string | null };
 
 export const Route = createFileRoute("/obras/")({
   component: ObrasList,
@@ -19,6 +20,7 @@ function ObrasList() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [obras, setObras] = useState<Obra[] | null>(null);
+  const [nomes, setNomes] = useState<Map<string, string>>(new Map());
   const [novo, setNovo] = useState("");
   const [criando, setCriando] = useState(false);
 
@@ -26,11 +28,15 @@ function ObrasList() {
     if (!user) return;
     supabase
       .from("obras")
-      .select("id, nome, updated_at")
-      .order("updated_at", { ascending: false })
-      .then(({ data, error }) => {
+      .select("id, nome, modificado_em, modificado_por")
+      .order("modificado_em", { ascending: false })
+      .then(async ({ data, error }) => {
         if (error) toast.error(error.message);
-        else setObras((data ?? []) as Obra[]);
+        else {
+          const list = (data ?? []) as Obra[];
+          setObras(list);
+          setNomes(await getNomes(list.map((o) => o.modificado_por)));
+        }
       });
   }, [user]);
 
@@ -100,7 +106,7 @@ function ObrasList() {
                       <div>
                         <div className="font-medium">{o.nome}</div>
                         <div className="text-xs text-muted-foreground">
-                          Atualizado {new Date(o.updated_at).toLocaleDateString("pt-PT")}
+                          Modificado por {formatModificado(o.modificado_por ? nomes.get(o.modificado_por) : undefined, o.modificado_em)}
                         </div>
                       </div>
                     </div>

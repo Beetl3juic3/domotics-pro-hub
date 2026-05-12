@@ -11,9 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Loader2, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { ESTADOS, type Estado } from "@/lib/obra-utils";
+import { getNomes, formatModificado } from "@/lib/profiles";
 
-type Apt = { id: string; nome: string; estado: Estado; obra_id: string };
-type Item = { id: string; descricao: string; concluido: boolean; ordem: number };
+type Apt = { id: string; nome: string; estado: Estado; obra_id: string; modificado_em: string | null; modificado_por: string | null };
+type Item = { id: string; descricao: string; concluido: boolean; ordem: number; modificado_em: string | null; modificado_por: string | null };
 
 export const Route = createFileRoute("/obras/$id/apartamentos/$aptId")({
   component: ApartamentoDetail,
@@ -24,6 +25,7 @@ function ApartamentoDetail() {
   const { user, loading } = useAuth();
   const [apt, setApt] = useState<Apt | null>(null);
   const [items, setItems] = useState<Item[]>([]);
+  const [nomes, setNomes] = useState<Map<string, string>>(new Map());
   const [novo, setNovo] = useState("");
   const [carregando, setCarregando] = useState(true);
 
@@ -31,17 +33,20 @@ function ApartamentoDetail() {
     if (!user) return;
     (async () => {
       const [{ data: a, error: e1 }, { data: it, error: e2 }] = await Promise.all([
-        supabase.from("apartamentos").select("id, nome, estado, obra_id").eq("id", aptId).maybeSingle(),
+        supabase.from("apartamentos").select("id, nome, estado, obra_id, modificado_em, modificado_por").eq("id", aptId).maybeSingle(),
         supabase
           .from("checklist_items")
-          .select("id, descricao, concluido, ordem")
+          .select("id, descricao, concluido, ordem, modificado_em, modificado_por")
           .eq("apartamento_id", aptId)
           .order("ordem"),
       ]);
       if (e1) toast.error(e1.message);
       if (e2) toast.error(e2.message);
-      setApt((a as Apt) ?? null);
-      setItems((it ?? []) as Item[]);
+      const aptData = (a as Apt) ?? null;
+      const itemsData = (it ?? []) as Item[];
+      setApt(aptData);
+      setItems(itemsData);
+      setNomes(await getNomes([aptData?.modificado_por, ...itemsData.map((i) => i.modificado_por)]));
       setCarregando(false);
     })();
   }, [aptId, user]);
@@ -52,8 +57,17 @@ function ApartamentoDetail() {
   async function alterarEstado(estado: Estado) {
     if (!apt) return;
     setApt({ ...apt, estado });
-    const { error } = await supabase.from("apartamentos").update({ estado }).eq("id", apt.id);
-    if (error) toast.error(error.message);
+    const { data, error } = await supabase
+      .from("apartamentos")
+      .update({ estado })
+      .eq("id", apt.id)
+      .select("modificado_em, modificado_por")
+      .single();
+    if (error) return toast.error(error.message);
+    if (data) {
+      setApt((p) => (p ? { ...p, modificado_em: data.modificado_em, modificado_por: data.modificado_por } : p));
+      setNomes(await getNomes([data.modificado_por]));
+    }
   }
 
   async function adicionarItem(e: React.FormEvent) {
@@ -63,18 +77,29 @@ function ApartamentoDetail() {
     const { data, error } = await supabase
       .from("checklist_items")
       .insert({ apartamento_id: aptId, descricao: novo.trim(), ordem })
-      .select("id, descricao, concluido, ordem")
+      .select("id, descricao, concluido, ordem, modificado_em, modificado_por")
       .single();
     if (error) return toast.error(error.message);
-    setItems([...items, data as Item]);
+    const it = data as Item;
+    setItems([...items, it]);
+    setNomes(await getNomes([it.modificado_por]));
     setNovo("");
   }
 
   async function toggleItem(item: Item) {
     const concluido = !item.concluido;
     setItems((arr) => arr.map((i) => (i.id === item.id ? { ...i, concluido } : i)));
-    const { error } = await supabase.from("checklist_items").update({ concluido }).eq("id", item.id);
-    if (error) toast.error(error.message);
+    const { data, error } = await supabase
+      .from("checklist_items")
+      .update({ concluido })
+      .eq("id", item.id)
+      .select("modificado_em, modificado_por")
+      .single();
+    if (error) return toast.error(error.message);
+    if (data) {
+      setItems((arr) => arr.map((i) => (i.id === item.id ? { ...i, modificado_em: data.modificado_em, modificado_por: data.modificado_por } : i)));
+      setNomes(await getNomes([data.modificado_por]));
+    }
   }
 
   async function removerItem(item: Item) {
@@ -111,6 +136,11 @@ function ApartamentoDetail() {
                 <p className="text-sm text-muted-foreground">
                   {concluidos} / {items.length} tarefas concluídas
                 </p>
+                {apt.modificado_em && (
+                  <p className="text-xs text-muted-foreground">
+                    Última alteração: {formatModificado(apt.modificado_por ? nomes.get(apt.modificado_por) : undefined, apt.modificado_em)}
+                  </p>
+                )}
               </div>
               <Select value={apt.estado} onValueChange={(v) => alterarEstado(v as Estado)}>
                 <SelectTrigger className="w-full sm:w-48">
@@ -161,6 +191,11 @@ function ApartamentoDetail() {
                         }`}
                       >
                         {it.descricao}
+                        {it.modificado_em && (
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            · {formatModificado(it.modificado_por ? nomes.get(it.modificado_por) : undefined, it.modificado_em)}
+                          </span>
+                        )}
                       </label>
                       <button
                         type="button"

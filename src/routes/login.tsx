@@ -51,6 +51,17 @@ function LoginPage() {
     else toast.success("Conta criada. Já podes entrar.");
   }
 
+  async function handleForgot() {
+    if (!email) return toast.error("Escreve o teu email no campo acima primeiro.");
+    setBusy(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setBusy(false);
+    if (error) toast.error(error.message);
+    else toast.success("Email de reposição enviado. Verifica a tua caixa de correio.");
+  }
+
   return (
     <div
       className="flex min-h-screen items-center justify-center px-4 py-12"
@@ -77,6 +88,13 @@ function LoginPage() {
                 <Button type="submit" className="w-full" disabled={busy}>
                   {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Entrar
                 </Button>
+                <button
+                  type="button"
+                  onClick={handleForgot}
+                  className="block w-full text-center text-sm text-muted-foreground hover:text-foreground"
+                >
+                  Esqueci a password
+                </button>
               </form>
             </TabsContent>
             <TabsContent value="signup">

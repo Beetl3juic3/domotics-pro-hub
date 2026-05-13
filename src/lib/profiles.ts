@@ -17,6 +17,6 @@ export async function getNomes(userIds: (string | null | undefined)[]): Promise<
 
 export function formatModificado(nome: string | undefined, data: string | undefined | null): string {
   if (!data) return "";
-  const d = new Date(data).toLocaleString("pt-PT", { dateStyle: "short", timeStyle: "short" });
+  const d = new Date(data).toLocaleDateString("pt-PT");
   return nome ? `${nome} · ${d}` : d;
 }

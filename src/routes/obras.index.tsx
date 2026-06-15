@@ -6,9 +6,20 @@ import { AppHeader } from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Building2, ChevronRight, Loader2, Plus } from "lucide-react";
+import { Building2, ChevronRight, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { getNomes, formatModificado } from "@/lib/profiles";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 type Obra = { id: string; nome: string; modificado_em: string | null; modificado_por: string | null };
 
@@ -23,6 +34,8 @@ function ObrasList() {
   const [nomes, setNomes] = useState<Map<string, string>>(new Map());
   const [novo, setNovo] = useState("");
   const [criando, setCriando] = useState(false);
+  const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [editNome, setEditNome] = useState("");
 
   useEffect(() => {
     if (!user) return;
@@ -56,6 +69,27 @@ function ObrasList() {
     if (error) return toast.error(error.message);
     setNovo("");
     navigate({ to: "/obras/$id", params: { id: data.id } });
+  }
+
+  async function apagarObra(id: string) {
+    const prev = obras;
+    setObras((arr) => (arr ?? []).filter((o) => o.id !== id));
+    const { error } = await supabase.from("obras").delete().eq("id", id);
+    if (error) {
+      setObras(prev);
+      toast.error(error.message);
+    } else {
+      toast.success("Obra apagada");
+    }
+  }
+
+  async function guardarNome(id: string) {
+    const nome = editNome.trim();
+    if (!nome) return;
+    const { error } = await supabase.from("obras").update({ nome }).eq("id", id);
+    if (error) return toast.error(error.message);
+    setObras((arr) => (arr ?? []).map((o) => (o.id === id ? { ...o, nome } : o)));
+    setEditandoId(null);
   }
 
   return (
@@ -97,22 +131,75 @@ function ObrasList() {
           <ul className="space-y-3">
             {obras.map((o) => (
               <li key={o.id}>
-                <Link to="/obras/$id" params={{ id: o.id }} className="block">
-                  <Card className="flex items-center justify-between p-4 transition hover:shadow-md">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
-                        <Building2 className="h-5 w-5 text-secondary-foreground" />
-                      </span>
-                      <div>
-                        <div className="font-medium">{o.nome}</div>
-                        <div className="text-xs text-muted-foreground">
-                          Modificado por {formatModificado(o.modificado_por ? nomes.get(o.modificado_por) : undefined, o.modificado_em)}
+                <Card className="flex items-center justify-between p-4 transition hover:shadow-md">
+                  {editandoId === o.id ? (
+                    <form
+                      className="flex flex-1 items-center gap-2"
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        guardarNome(o.id);
+                      }}
+                    >
+                      <Input
+                        autoFocus
+                        value={editNome}
+                        onChange={(e) => setEditNome(e.target.value)}
+                        maxLength={120}
+                      />
+                      <Button type="submit" size="sm">Guardar</Button>
+                      <Button type="button" size="sm" variant="ghost" onClick={() => setEditandoId(null)}>
+                        Cancelar
+                      </Button>
+                    </form>
+                  ) : (
+                    <>
+                      <Link to="/obras/$id" params={{ id: o.id }} className="flex flex-1 items-center gap-3">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
+                          <Building2 className="h-5 w-5 text-secondary-foreground" />
+                        </span>
+                        <div>
+                          <div className="font-medium">{o.nome}</div>
+                          <div className="text-xs text-muted-foreground">
+                            Modificado por {formatModificado(o.modificado_por ? nomes.get(o.modificado_por) : undefined, o.modificado_em)}
+                          </div>
                         </div>
+                      </Link>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setEditandoId(o.id);
+                            setEditNome(o.nome);
+                          }}
+                          aria-label="Renomear"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" aria-label="Apagar">
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Apagar obra?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Vai apagar “{o.nome}” e todos os apartamentos e tarefas associados. Esta ação não pode ser revertida.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => apagarObra(o.id)}>Apagar</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
                       </div>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </Card>
-                </Link>
+                    </>
+                  )}
+                </Card>
               </li>
             ))}
           </ul>

@@ -5,7 +5,7 @@ st.set_page_config(
     page_title="Smarthome SPNOS - Técnico",
     page_icon="📱",
     layout="centered",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="auto"
 )
 
 # ==========================================
@@ -19,7 +19,7 @@ if 'usuarios' not in st.session_state:
 if 'usuario_logado' not in st.session_state:
     st.session_state.usuario_logado = None
 
-# Base de dados simulada de obras e checklists de domótica
+# Inicialização da Base de Dados de Obras Dinâmica
 if 'obras' not in st.session_state:
     st.session_state.obras = {
         "Apartamento 302 - Bloco A": {
@@ -58,12 +58,10 @@ if 'obras' not in st.session_state:
 # --- 1. ECRÃ DE LOGIN ---
 if st.session_state.usuario_logado is None:
     
-    # CSS Customizado para o Login (Fundo Azul Integral)
+    # CSS Customizado para o Login
     st.markdown("""
         <style>
-        .stApp {
-            background-color: #0084d6 !important;
-        }
+        .stApp { background-color: #0084d6 !important; }
         div[data-testid="stHeader"] { display: none !important; }
         footer { display: none !important; }
         
@@ -73,49 +71,21 @@ if st.session_state.usuario_logado is None:
             margin-bottom: 2rem;
             color: #ffffff;
         }
-        .header-container h1 {
-            font-weight: bold;
-            font-size: 32px;
-            color: #ffffff !important;
-        }
-        .header-container p {
-            font-size: 15px;
-            opacity: 0.9;
-            color: #ffffff !important;
-        }
+        .header-container h1 { font-weight: bold; font-size: 32px; color: #ffffff !important; }
+        .header-container p { font-size: 15px; opacity: 0.9; color: #ffffff !important; }
         
-        /* Estilos do formulário de login */
-        label, div[data-testid="stMarkdownContainer"] p {
-            color: #4a5568 !important;
-            font-weight: 500 !important;
-        }
+        label, div[data-testid="stMarkdownContainer"] p { color: #4a5568 !important; font-weight: 500 !important; }
         div[data-testid="stTextInput"] input {
-            background-color: #ffffff !important;
-            color: #222222 !important;
-            border: 1px solid #dcdfe6 !important;
-            border-radius: 8px !important;
-            height: 45px !important;
+            background-color: #ffffff !important; color: #222222 !important;
+            border: 1px solid #dcdfe6 !important; border-radius: 8px !important; height: 45px !important;
         }
         div.stButton > button {
-            background-color: #006ce6 !important;
-            color: #ffffff !important;
-            border-radius: 12px !important;
-            border: none !important;
-            height: 50px !important;
-            width: 100% !important;
-            font-weight: bold !important;
-            font-size: 16px !important;
-            margin-top: 10px !important;
+            background-color: #006ce6 !important; color: #ffffff !important;
+            border-radius: 12px !important; border: none !important; height: 50px !important;
+            width: 100% !important; font-weight: bold !important; font-size: 16px !important; margin-top: 10px !important;
         }
-        div.stButton > button:hover {
-            background-color: #005bb5 !important;
-        }
-        .forgot-password {
-            text-align: center;
-            margin-top: 15px;
-            font-size: 14px;
-            color: #ecf0f1 !important;
-        }
+        div.stButton > button:hover { background-color: #005bb5 !important; }
+        .forgot-password { text-align: center; margin-top: 15px; font-size: 14px; color: #ecf0f1 !important; }
         </style>
     """, unsafe_allow_html=True)
 
@@ -126,14 +96,12 @@ if st.session_state.usuario_logado is None:
         </div>
     """, unsafe_allow_html=True)
 
-    # Abas Entrar / Registar
     aba_login, aba_registro = st.tabs(["         Entrar         ", "         Registar         "])
     
     with aba_login:
         with st.form(key="formulario_login", clear_on_submit=False):
             email_input = st.text_input("Email", placeholder="Insira o seu email", key="login_email")
             pass_input = st.text_input("Palavra-passe", type="password", placeholder="Insira a sua password", key="login_pass")
-            
             submetido = st.form_submit_button("Entrar", use_container_width=True)
             
             if submetido:
@@ -160,28 +128,71 @@ if st.session_state.usuario_logado is None:
 
 # --- 2. ÁREA PROTEGIDA (GESTÃO DE OBRAS E CHECKLISTS) ---
 else:
-    # Resetar o estilo para o painel de trabalho (Fundo Claro)
+    # Estilização do Painel de Trabalho
     st.markdown("""
         <style>
         .stApp { background-color: #f8f9fa !important; }
         label, div[data-testid="stMarkdownContainer"] p { color: #333333 !important; }
         .obra-card {
-            background-color: #ffffff;
-            padding: 15px 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            margin-top: 15px;
-            margin-bottom: 10px;
+            background-color: #ffffff; padding: 15px 20px; border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-top: 15px; margin-bottom: 10px;
             border-left: 5px solid #0084d6;
         }
-        .obra-card h3 {
-            margin: 0px !important;
-            color: #1a202c !important;
-        }
+        .obra-card h3 { margin: 0px !important; color: #1a202c !important; }
         </style>
     """, unsafe_allow_html=True)
 
-    # Barra Superior / Header do Painel
+    # --- MENU LATERAL (SIDEBAR) PARA ADICIONAR/MODIFICAR OBRAS ---
+    with st.sidebar:
+        st.header("⚙️ Painel de Administração")
+        
+        # Separador 1: Criar Nova Obra
+        st.subheader("➕ Nova Obra / Apartamento")
+        with st.form("criar_obra_form", clear_on_submit=True):
+            nova_obra_nome = st.text_input("Nome do Apartamento", placeholder="Ex: Apartamento 501 - Bloco B")
+            estado_inicial = st.selectbox("Estado Inicial", ["Pendente", "Em Progresso", "Concluída"])
+            
+            st.write("Tarefas Iniciais (uma por linha):")
+            tarefas_texto = st.text_area("Tarefas", value="Instalar Shelly Wave 1PM Mini\nValidar no Home Assistant", height=100)
+            
+            botao_criar = st.form_submit_button("Criar Obra", use_container_width=True)
+            
+            if botao_criar and nova_obra_nome:
+                if nova_obra_nome not in st.session_state.obras:
+                    # Processar linhas do text_area para criar dicionário da checklist
+                    lista_t = [t.strip() for t in tarefas_texto.split("\n") if t.strip()]
+                    dict_checklist = {t: False for t in lista_t}
+                    
+                    st.session_state.obras[nova_obra_nome] = {
+                        "estado": estado_inicial,
+                        "checklist": dict_checklist
+                    }
+                    st.success(f"{nova_obra_nome} adicionado!")
+                    st.rerun()
+                else:
+                    st.error("Essa obra já existe!")
+
+        st.divider()
+        
+        # Separador 2: Modificar / Eliminar Obras Existentes
+        if st.session_state.obras:
+            st.subheader("📝 Modificar / Eliminar")
+            obra_selecionada = st.selectbox("Escolha a Obra", list(st.session_state.obras.keys()))
+            
+            # Adicionar tarefa à obra selecionada
+            nova_tarefa_avulsa = st.text_input("Adicionar tarefa a esta obra", placeholder="Ex: Sincronizar alarmes")
+            if st.button("Adicionar Tarefa", use_container_width=True) and nova_tarefa_avulsa:
+                st.session_state.obras[obra_selecionada]["checklist"][nova_tarefa_avulsa] = False
+                st.success("Tarefa adicionada!")
+                st.rerun()
+
+            st.write("---")
+            if st.button("🗑️ Eliminar Obra Selecionada", type="primary", use_container_width=True):
+                del st.session_state.obras[obra_selecionada]
+                st.warning(f"Obra {obra_selecionada} removida.")
+                st.rerun()
+
+    # Barra Superior do Painel Principal
     col_logo, col_logout = st.columns([3, 1])
     with col_logo:
         st.subheader("🔷 Painel Técnico - SPNOS")
@@ -191,6 +202,7 @@ else:
             st.rerun()
             
     st.write(f"*Sessão iniciada como: {st.session_state.usuario_logado}*")
+    st.caption("👈 Abre a barra lateral esquerda (Sidebar) para criar, modificar ou apagar obras e tarefas.")
     st.divider()
 
     st.title("📋 Gestão de Obras e Intervenções")
@@ -200,14 +212,12 @@ else:
     # --- LISTAGEM DE OBRAS ---
     for nome_obra, dados in st.session_state.obras.items():
         
-        # 1. Título do Apartamento dentro do Card Estilizado
         st.markdown(f"""
         <div class="obra-card">
             <h3>🏠 {nome_obra}</h3>
         </div>
         """, unsafe_allow_html=True)
         
-        # 2. Colunas para o Estado e Progresso
         col_estado, col_progresso = st.columns([1, 1])
         
         with col_estado:
@@ -231,7 +241,6 @@ else:
             st.progress(percentagem)
             st.caption(f"{tarefas_concluidas} de {total_tarefas} tarefas validadas.")
 
-        # 3. Secção da Checklist
         st.markdown("**Checklist de Instalação:**")
         
         tarefas = list(dados["checklist"].keys())
@@ -246,5 +255,4 @@ else:
             )
             st.session_state.obras[nome_obra]["checklist"][tarefa] = status_tarefa
         
-        # Linha divisória limpa entre apartamentos
         st.divider()

@@ -1,91 +1,153 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime
 
-# --- Configuração Inicial da Página ---
+# --- CONFIGURAÇÃO INICIAL DA PÁGINA ---
 st.set_page_config(
-    page_title="Smarthome SPNOS",
+    page_title="Smarthome SPNOS - Técnico",
     page_icon="📱",
-    layout="wide",  # Mudado para wide para a tabela de obras ter mais espaço
+    layout="centered",
     initial_sidebar_state="collapsed"
 )
 
 # ==========================================
-# --- BASE DE DADOS EM MEMÓRIA (SESSIONS) ---
+# --- BASE DE DADOS EM MEMÓRIA (Session State) ---
 # ==========================================
 if 'usuarios' not in st.session_state:
     st.session_state.usuarios = {
-        "marco.a.ramires@parceiros.nos.pt": "1234" 
+        "marco.a.ramires@parceiros.nos.pt": "1234"
     }
 
 if 'usuario_logado' not in st.session_state:
     st.session_state.usuario_logado = None
 
-# Base de dados simulada para as tuas obras e checklists
-if 'lista_obras' not in st.session_state:
-    st.session_state.lista_obras = [
-        {"ID Obra": "OBR-2026-001", "Data": "2026-06-10", "Tipo": "Fibra Óptica (FTTH)", "Estado": "Concluído", "Técnico": "marco.a.ramires"},
-        {"ID Obra": "OBR-2026-002", "Data": "2026-06-14", "Tipo": "Domótica (Shelly/Home Assistant)", "Estado": "Em Curso", "Técnico": "marco.a.ramires"},
-        {"ID Obra": "OBR-2026-003", "Data": "2026-06-15", "Tipo": "Sistemas de Alarme & CCTV", "Estado": "Pendente", "Técnico": "marco.a.ramires"}
-    ]
+# Base de dados simulada de obras e checklists de domótica
+if 'obras' not in st.session_state:
+    st.session_state.obras = {
+        "Apartamento 302 - Bloco A": {
+            "estado": "Em Progresso",
+            "checklist": {
+                "Instalar Shelly Wave 1PM Mini na iluminação": True,
+                "Configurar Gateway/Painel Central": False,
+                "Testar sensores de segurança e alarmes": False,
+                "Validar integração no Home Assistant": False
+            }
+        },
+        "Apartamento 105 - Premium": {
+            "estado": "Pendente",
+            "checklist": {
+                "Passagem de cablagem/Fibra ótica": False,
+                "Instalação de tomadas inteligentes": False,
+                "Configuração de cenários de domótica": False,
+                "Testes de carga e monitorização de energia": False
+            }
+        },
+        "Apartamento 44 - Cobertura": {
+            "estado": "Concluída",
+            "checklist": {
+                "Instalar automação de estores": True,
+                "Configurar controlo de acessos QR Code": True,
+                "Sincronizar câmaras IP com o NVR": True,
+                "Formação de utilização ao cliente": True
+            }
+        }
+    }
 
 # ==========================================
-# --- LÓGICA DE TELAS ---
+# --- LÓGICA DE INTERFACE (Ecrãs) ---
 # ==========================================
 
-# 1. ECRÃ DE LOGIN
+# --- 1. ECRÃ DE LOGIN ---
 if st.session_state.usuario_logado is None:
     
+    # CSS Customizado para o Login (Fundo Azul Integral)
     st.markdown("""
         <style>
-        .stApp { background-color: #0084d6 !important; }
+        .stApp {
+            background-color: #0084d6 !important;
+        }
         div[data-testid="stHeader"] { display: none !important; }
-        div[data-testid="stSidebarNav"] { display: none !important; }
         footer { display: none !important; }
         
-        .header-container { text-align: center; margin-top: 3rem; margin-bottom: 1.5rem; }
-        .header-container h1 { font-weight: 700; font-size: 32px; color: #ffffff !important; margin-bottom: 5px; }
-        .header-container p { font-size: 15px; color: #e2e8f0 !important; opacity: 0.9; }
+        .header-container {
+            text-align: center;
+            margin-top: 3rem;
+            margin-bottom: 2rem;
+            color: #ffffff;
+        }
+        .header-container h1 {
+            font-weight: bold;
+            font-size: 32px;
+            color: #ffffff !important;
+        }
+        .header-container p {
+            font-size: 15px;
+            opacity: 0.9;
+            color: #ffffff !important;
+        }
         
-        .login-card { background-color: #ffffff; padding: 2.5rem; border-radius: 16px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15); margin-bottom: 2rem; }
-        .login-card label, .login-card p { color: #2d3748 !important; }
-        
-        button[data-baseweb="tab"] { font-size: 16px !important; font-weight: 600 !important; color: #a0aec0 !important; border-bottom-width: 2px !important; }
-        button[aria-selected="true"] { color: #0084d6 !important; border-bottom-color: #0084d6 !important; }
-        
-        div[data-testid="stTextInput"] input { background-color: #f7fafc !important; color: #1a202c !important; border: 1px solid #e2e8f0 !important; border-radius: 10px !important; height: 48px !important; }
-        div[data-testid="stTextInput"] input:focus { border-color: #0084d6 !important; box-shadow: 0 0 0 1px #0084d6 !important; }
-        div[data-testid="stTextInput"] label p { color: #4a5568 !important; font-weight: 600 !important; }
-
-        div.stButton > button { background-color: #0072c6 !important; color: #ffffff !important; border-radius: 10px !important; border: none !important; height: 48px !important; width: 100% !important; font-weight: 600; margin-top: 15px !important; }
-        div.stButton > button:hover { background-color: #005ea5 !important; }
+        /* Estilos do formulário de login */
+        label, div[data-testid="stMarkdownContainer"] p {
+            color: #4a5568 !important;
+            font-weight: 500 !important;
+        }
+        div[data-testid="stTextInput"] input {
+            background-color: #ffffff !important;
+            color: #222222 !important;
+            border: 1px solid #dcdfe6 !important;
+            border-radius: 8px !important;
+            height: 45px !important;
+        }
+        div.stButton > button {
+            background-color: #006ce6 !important;
+            color: #ffffff !important;
+            border-radius: 12px !important;
+            border: none !important;
+            height: 50px !important;
+            width: 100% !important;
+            font-weight: bold !important;
+            font-size: 16px !important;
+            margin-top: 10px !important;
+        }
+        div.stButton > button:hover {
+            background-color: #005bb5 !important;
+        }
+        .forgot-password {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #718096;
+        }
         </style>
     """, unsafe_allow_html=True)
 
-    st.write("<div style='padding-top: 2vh;'></div>", unsafe_allow_html=True)
-    st.markdown('<div class="header-container"><h1>Smarthome SPNOS</h1><p>Acede à tua área de obras e checklists</p></div>', unsafe_allow_html=True)
+    st.markdown("""
+        <div class="header-container">
+            <h1>Smarthome SPNOS</h1>
+            <p>Acede à tua área de obras e checklists</p>
+        </div>
+    """, unsafe_allow_html=True)
 
-    st.markdown('<div class="login-card">', unsafe_allow_html=True)
-    aba_login, aba_registro = st.tabs(["Entrar", "Registar"])
+    # Abas Entrar / Registar
+    aba_login, aba_registro = st.tabs(["         Entrar         ", "         Registar         "])
     
     with aba_login:
-        st.write("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
         email_input = st.text_input("Email", placeholder="Insira o seu email", key="login_email")
         pass_input = st.text_input("Palavra-passe", type="password", placeholder="Insira a sua password", key="login_pass")
         
-        if st.button("Entrar", use_container_width=True, key="btn_entrar"):
+        if st.button("Entrar", use_container_width=True):
             if email_input in st.session_state.usuarios and st.session_state.usuarios[email_input] == pass_input:
                 st.session_state.usuario_logado = email_input
                 st.rerun()
             else:
                 st.error("Email ou Palavra-passe incorretos.")
                 
+        st.markdown("<p class='forgot-password'>Esqueci a password</p>", unsafe_allow_html=True)
+        
     with aba_registro:
-        st.write("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
         novo_email = st.text_input("Novo Email", placeholder="exemplo@parceiros.nos.pt", key="reg_email")
         nova_pass = st.text_input("Criar Palavra-passe", type="password", placeholder="Mínimo 4 caracteres", key="reg_pass")
         
-        if st.button("Criar Conta", use_container_width=True, key="btn_registar"):
+        if st.button("Criar Conta", use_container_width=True):
             if not novo_email or not nova_pass:
                 st.error("Preencha todos os campos.")
             elif novo_email in st.session_state.usuarios:
@@ -93,96 +155,91 @@ if st.session_state.usuario_logado is None:
             else:
                 st.session_state.usuarios[novo_email] = nova_pass
                 st.success("Conta criada! Alterne para a aba 'Entrar'.")
-                
-    st.markdown('</div>', unsafe_allow_html=True)
 
-# 2. ÁREA LOGADA - GESTÃO DE OBRAS ATIVA
+# --- 2. ÁREA PROTEGIDA (GESTÃO DE OBRAS E CHECKLISTS) ---
 else:
+    # Resetar o estilo para o painel de trabalho (Fundo Claro)
     st.markdown("""
         <style>
         .stApp { background-color: #f8f9fa !important; }
-        div[data-testid="stHeader"] { display: block !important; }
-        h1, h2, h3, p, label, span { color: #1a202c !important; }
-        
-        .logout-container button {
-            background-color: #dc3545 !important;
-            color: white !important;
-            border-radius: 6px !important;
-            height: 38px !important;
-            font-size: 14px !important;
-            margin-top: 8px !important;
-            border: none !important;
+        label, div[data-testid="stMarkdownContainer"] p { color: #333333 !important; }
+        .obra-card {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+            border-left: 5px solid #0084d6;
         }
-        .logout-container button:hover { background-color: #bd2130 !important; }
         </style>
     """, unsafe_allow_html=True)
 
-    # Topo da App
-    col_logo, col_logout = st.columns([4, 1])
+    # Barra Superior / Header do Painel
+    col_logo, col_logout = st.columns([3, 1])
     with col_logo:
-        st.markdown("<h2 style='margin:0;'>🔷 Painel Smarthome SPNOS</h2>", unsafe_allow_html=True)
+        st.subheader("🔷 Painel Técnico - SPNOS")
     with col_logout:
-        st.markdown('<div class="logout-container">', unsafe_allow_html=True)
-        if st.button("Sair da Conta ➔", key="logout_btn", use_container_width=True):
+        if st.button("Sair ➔", key="logout_btn", use_container_width=True):
             st.session_state.usuario_logado = None
             st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
             
-    st.write("---")
-    
-    user_email = st.session_state.usuario_logado
-    nome_tecnico = user_email.split('@')[0]
-    
-    # Layout de duas colunas para a Área de Trabalho: Esquerda (Nova Obra) | Direita (Lista de Obras)
-    col_form, col_tabela = st.columns([1, 2])
-    
-    with col_form:
-        st.subheader("📝 Nova Checklist / Obra")
-        with st.form("form_nova_obra", clear_on_submit=True):
-            id_obra = st.text_input("ID da Obra / Serviço", placeholder="Ex: OBR-2026-X")
-            tipo_obra = st.selectbox("Tipo de Intervenção", [
-                "Fibra Óptica (FTTH)", 
-                "Domótica (Shelly/Home Assistant)", 
-                "Sistemas de Alarme & CCTV"
-            ])
-            estado_obra = st.selectbox("Estado Inicial", ["Pendente", "Em Curso", "Concluído"])
-            
-            submetido = st.form_submit_button("Registar Obra")
-            if submetido:
-                if id_obra.strip() == "":
-                    st.error("Por favor, insira um ID de Obra válido.")
-                else:
-                    nova_obra = {
-                        "ID Obra": id_obra,
-                        "Data": datetime.now().strftime("%Y-%m-%d"),
-                        "Tipo": tipo_obra,
-                        "Estado": estado_obra,
-                        "Técnico": nome_tecnico
-                    }
-                    st.session_state.lista_obras.append(nova_obra)
-                    st.success(f"Obra {id_obra} adicionada com sucesso!")
-                    st.rerun()
+    st.write(f"*Sessão iniciada como: {st.session_state.usuario_logado}*")
+    st.hr()
 
-    with col_tabela:
-        st.subheader("📋 Obras e Checklists Ativas")
+    st.title("📋 Gestão de Obras e Intervenções")
+    st.write("Seleciona e atualiza o estado dos apartamentos e valida as tarefas de domótica em curso.")
+
+    # --- LISTAGEM DE OBRAS ---
+    for nome_obra, dados in st.session_state.obras.items():
         
-        # Filtros Rápidos
-        filtro_estado = st.multiselect("Filtrar por Estado:", ["Pendente", "Em Curso", "Concluído"], default=["Pendente", "Em Curso", "Concluído"])
-        
-        # Converter para DataFrame para mostrar de forma bonita
-        if st.session_state.lista_obras:
-            df_obras = pd.DataFrame(st.session_state.lista_obras)
+        # Container visual para cada obra
+        with st.container():
+            st.markdown(f"""
+            <div class="obra-card">
+                <h3>🏠 {nome_obra}</h3>
+            </div>
+            """, unsafe_allow_html=True)
             
-            # Aplicar o filtro de estado
-            df_filtrado = df_obras[df_obras["Estado"].isin(filtro_estado)]
+            col_estado, col_progresso = st.columns([1, 1])
             
-            if not df_filtrado.empty:
-                # Exibe a tabela interativa do Streamlit
-                st.dataframe(df_filtrado, use_container_width=True, hide_index=True)
+            with col_estado:
+                # Seletor de Estado da Obra
+                lista_estados = ["Pendente", "Em Progresso", "Concluída"]
+                indice_atual = lista_estados.index(dados["estado"])
                 
-                # Resumo rápido
-                st.metric(label="Total de Obras Visualizadas", value=len(df_filtrado))
-            else:
-                st.info("Nenhuma obra encontrada para os filtros selecionados.")
-        else:
-            st.info("Ainda não tens nenhuma obra registada na base de dados.")
+                novo_estado = st.selectbox(
+                    f"Estado da Obra",
+                    options=lista_estados,
+                    index=indice_atual,
+                    key=f"estado_{nome_obra}"
+                )
+                st.session_state.obras[nome_obra]["estado"] = novo_estado
+
+            with col_progresso:
+                # Cálculo simples de progresso da checklist
+                total_tarefas = len(dados["checklist"])
+                tarefas_concluidas = sum(1 for concluida in dados["checklist"].values() if concluida)
+                percentagem = tarefas_concluidas / total_tarefas if total_tarefas > 0 else 0.0
+                
+                st.write("Progresso técnico:")
+                st.progress(percentagem)
+                st.caption(f"{tarefas_concluidas} de {total_tarefas} tarefas validadas.")
+
+            # --- CHECKLIST DA OBRA ---
+            st.markdown("**Checklist de Instalação:**")
+            
+            # Iterar pelas tarefas da checklist
+            for tarefa, concluida in dados["checklist"].items():
+                # Chave única combinando o nome do apartamento e a tarefa
+                chave_tarefa = f"chk_{nome_obra}_{tarefa}"
+                
+                status_tarefa = st.checkbox(
+                    tarefa, 
+                    value=concluida, 
+                    key=chave_tarefa
+                )
+                # Atualiza o estado diretamente na base de dados em memória
+                st.session_state.obras[nome_obra]["checklist"][tarefa] = status_tarefa
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.divider()

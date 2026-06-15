@@ -115,7 +115,7 @@ if st.session_state.usuario_logado is None:
             text-align: center;
             margin-top: 15px;
             font-size: 14px;
-            color: #718096;
+            color: #ecf0f1 !important;
         }
         </style>
     """, unsafe_allow_html=True)
@@ -130,17 +130,21 @@ if st.session_state.usuario_logado is None:
     # Abas Entrar / Registar
     aba_login, aba_registro = st.tabs(["         Entrar         ", "         Registar         "])
     
+    # --- BLOCO CORRIGIDO COM FORMULÁRIO ---
     with aba_login:
-        email_input = st.text_input("Email", placeholder="Insira o seu email", key="login_email")
-        pass_input = st.text_input("Palavra-passe", type="password", placeholder="Insira a sua password", key="login_pass")
-        
-        if st.button("Entrar", use_container_width=True):
-            if email_input in st.session_state.usuarios and st.session_state.usuarios[email_input] == pass_input:
-                st.session_state.usuario_logado = email_input
-                st.rerun()
-            else:
-                st.error("Email ou Palavra-passe incorretos.")
-                
+        with st.form(key="formulario_login", clear_on_submit=False):
+            email_input = st.text_input("Email", placeholder="Insira o seu email", key="login_email")
+            pass_input = st.text_input("Palavra-passe", type="password", placeholder="Insira a sua password", key="login_pass")
+            
+            submetido = st.form_submit_button("Entrar", use_container_width=True)
+            
+            if submetido:
+                if email_input in st.session_state.usuarios and st.session_state.usuarios[email_input] == pass_input:
+                    st.session_state.usuario_logado = email_input
+                    st.rerun()
+                else:
+                    st.error("Email ou Palavra-passe incorretos.")
+                    
         st.markdown("<p class='forgot-password'>Esqueci a password</p>", unsafe_allow_html=True)
         
     with aba_registro:
@@ -230,7 +234,6 @@ else:
             
             # Iterar pelas tarefas da checklist
             for tarefa, concluida in dados["checklist"].items():
-                # Chave única combinando o nome do apartamento e a tarefa
                 chave_tarefa = f"chk_{nome_obra}_{tarefa}"
                 
                 status_tarefa = st.checkbox(
@@ -238,7 +241,6 @@ else:
                     value=concluida, 
                     key=chave_tarefa
                 )
-                # Atualiza o estado diretamente na base de dados em memória
                 st.session_state.obras[nome_obra]["checklist"][tarefa] = status_tarefa
             
             st.markdown("<br>", unsafe_allow_html=True)

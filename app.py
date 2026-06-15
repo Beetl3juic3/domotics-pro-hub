@@ -5,43 +5,36 @@ from datetime import datetime
 # Configuração da página
 st.set_page_config(page_title="Smarthome SPNOS", page_icon="📱", layout="centered")
 
-# --- FORÇAR DESIGN EXATAMENTE IGUAL AO ORIGINAL ---
+# --- CUSTOMIZAÇÃO EXTREMA DE INTERFACE (Evita conflitos de temas do Streamlit) ---
 st.markdown("""
     <style>
-    /* Forçar o fundo azul da página apenas no ecrã de login se não estiver logado */
+    /* Forçar o fundo azul vivo em todo o ecrã de Login */
     .stApp {
-        background-color: #f8f9fa; /* Fundo padrão claro para a app */
+        background-color: #1e88e5 !important;
     }
     
-    /* Quando não está logado, vamos pintar o fundo de azul vivo */
-    [data-testid="stAppViewContainer"] {
-        background-color: #f8f9fa;
+    /* Forçar que todos os textos principais do login fiquem brancos e legíveis */
+    div[data-testid="stMarkdownContainer"] p, label, .stMarkdown {
+        color: #ffffff !important;
     }
     
-    /* Card Branco Central do Login */
-    .login-container {
-        background-color: #ffffff !important;
-        padding: 35px;
-        border-radius: 16px;
-        box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.05);
-        max-width: 480px;
-        margin: 0 auto;
-        border: 1px solid #eef0f3;
-    }
-    
-    /* Ajustar inputs do Streamlit para ficarem brancos com borda cinza clara */
+    /* Forçar os inputs de texto a ficarem totalmente brancos com texto escuro no interior */
     div[data-testid="stTextInput"] input {
         background-color: #ffffff !important;
-        color: #333333 !important;
-        border: 1px solid #dcdfe6 !important;
+        color: #222222 !important;
+        border: none !important;
         border-radius: 8px !important;
-        height: 42px;
+        height: 45px !important;
     }
     
-    /* Forçar texto das etiquetas em preto/cinza escuro */
-    label {
-        color: #333333 !important;
-        font-weight: 500 !important;
+    /* Esconder os blocos de abas nativos do Streamlit que geram caixas pretas */
+    .stTabs, [data-baseweb="tab-list"] {
+        display: none !important;
+    }
+
+    /* Estilização para o ecrã interior (área logada) */
+    .logged-bg {
+        background-color: #f8f9fa !important;
     }
     
     /* Estilo dos Cards de Obras e Apartamentos */
@@ -57,23 +50,6 @@ st.markdown("""
     .subtext {
         color: #8c939f;
         font-size: 13px;
-    }
-    
-    /* Customização das abas de login para parecerem botões ovais */
-    .stTabs [data-baseweb="tab-list"] {
-        background-color: #eef2f7;
-        padding: 4px;
-        border-radius: 8px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        border-radius: 6px;
-        padding: 6px 16px;
-        color: #4a5568;
-    }
-    .stTabs [aria-selected="true"] {
-        background-color: #ffffff !important;
-        box-shadow: 0px 2px 4px rgba(0,0,0,0.05);
-        color: #1a202c !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -110,74 +86,86 @@ if 'obra_selecionada' not in st.session_state:
     st.session_state.obra_selecionada = None
 if 'ap_selecionado' not in st.session_state:
     st.session_state.ap_selecionado = None
+if 'modo_login' not in st.session_state:
+    st.session_state.modo_login = "Entrar"
 
 # ==========================================
-# ECRÃ DE LOGIN ESTILIZADO (Igual à imagem anterior)
+# ECRÃ DE LOGIN PERSONALIZADO (FUNDO AZUL INTEGRAL)
 # ==========================================
 if st.session_state.usuario_logado is None:
-    # Injetar o fundo azul vivo apenas neste ecrã
-    st.markdown("<style>[data-testid='stAppViewContainer'] { background-color: #0084d6 !important; }</style>", unsafe_allow_html=True)
     
-    st.write("<div style='padding-top: 5vh;'></div>", unsafe_allow_html=True)
+    st.write("<div style='padding-top: 8vh;'></div>", unsafe_allow_html=True)
     
-    # Início do Bloco Branco Central
-    st.markdown('<div class="login-container">', unsafe_allow_html=True)
+    # Ícone da engrenagem centralizado em cima
+    st.markdown("""
+        <div style='background-color:rgba(255, 255, 255, 0.15); width:55px; height:55px; border-radius:12px; display:flex; align-items:center; justify-content:center; margin: 0 auto 15px auto; color:white; font-size:24px; text-align:center; line-height:55px;'>
+        ⚙️
+        </div>
+    """, unsafe_allow_html=True)
     
-    # Logotipo Azul Redondo
-    col1, col2, col3 = st.columns([1, 1, 1])
-    with col2:
-        st.markdown("""
-            <div style='background-color:#006ce6; width:60px; height:60px; border-radius:14px; display:flex; align-items:center; justify-content:center; margin: 0 auto 15px auto; color:white; font-size:28px; font-weight:bold; line-height:60px; text-align:center;'>
-            ⚙️
-            </div>
-        """, unsafe_allow_html=True)
-        
-    st.markdown("<h2 style='text-align: center; color: #1a202c; font-weight: 600; margin-bottom: 0;'>Smarthome SPNOS</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #718096; font-size: 14px; margin-top: 5px; margin-bottom: 25px;'>Acede à tua área de obras e checklists</p>", unsafe_allow_html=True)
+    # Títulos principais em Branco
+    st.markdown("<h1 style='text-align: center; color: white; font-weight: bold; margin-bottom: 0;'>Smarthome SPNOS</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: rgba(255,255,255,0.8); font-size: 15px; margin-top: 5px; margin-bottom: 35px;'>Acede à tua área de obras e checklists</p>", unsafe_allow_html=True)
     
-    aba_login, aba_registro = st.tabs(["         Entrar         ", "         Registar         "])
-    
-    with aba_login:
-        st.write(" ")
+    # Seletor alternativo de abas para evitar botões pretos do Streamlit
+    col_aba1, col_aba2 = st.columns(2)
+    with col_aba1:
+        if st.button("Entrar", use_container_width=True, type="secondary" if st.session_state.modo_login == "Entrar" else "ghost"):
+            st.session_state.modo_login = "Entrar"
+            st.rerun()
+    with col_aba2:
+        if st.button("Registar", use_container_width=True, type="secondary" if st.session_state.modo_login == "Registar" else "ghost"):
+            st.session_state.modo_login = "Registar"
+            st.rerun()
+            
+    st.markdown("<hr style='border-color: rgba(255,255,255,0.2); margin-top: 5px; margin-bottom: 20px;'>", unsafe_allow_html=True)
+
+    # Conteúdo dependendo do modo selecionado
+    if st.session_state.modo_login == "Entrar":
         email_input = st.text_input("Email", placeholder="Insira o seu email", key="login_email")
         pass_input = st.text_input("Palavra-passe", type="password", placeholder="Insira a sua password", key="login_pass")
-        st.write(" ")
         
-        if st.button("Entrar", use_container_width=True, type="primary"):
+        st.write(" ")
+        if st.button("Entrar na Conta", use_container_width=True):
             if email_input in st.session_state.usuarios and st.session_state.usuarios[email_input] == pass_input:
                 st.session_state.usuario_logado = email_input
-                st.error("") # Limpa avisos
                 st.rerun()
             else:
                 st.error("Email ou Palavra-passe incorretos.")
                 
-        st.markdown("<p style='text-align:center; font-size:13px; color:#718096; margin-top:20px;'>Esqueci a password</p>", unsafe_allow_html=True)
-        
-    with aba_registro:
-        st.write(" ")
+        st.markdown("<p style='text-align:center; font-size:13px; color:rgba(255,255,255,0.7); margin-top:20px; cursor:pointer;'>Esqueci a password</p>", unsafe_allow_html=True)
+
+    else:
         novo_email = st.text_input("Email", placeholder="exemplo@parceiros.nos.pt", key="reg_email")
         nova_pass = st.text_input("Criar Palavra-passe", type="password", placeholder="Mínimo 4 caracteres", key="reg_pass")
         
-        if st.button("Criar Conta", use_container_width=True, type="primary"):
+        st.write(" ")
+        if st.button("Efetuar Registo", use_container_width=True):
             if novo_email and nova_pass:
                 st.session_state.usuarios[novo_email] = nova_pass
-                st.success("Conta criada! Alterne para 'Entrar'.")
+                st.success("Conta criada! Clique em 'Entrar' em cima.")
             else:
-                st.error("Preencha os campos.")
-                
-    st.markdown('</div>', unsafe_allow_html=True) # Fim do Bloco Branco
+                st.error("Por favor, preencha todos os campos.")
 
 # ==========================================
-# ÁREA LOGADA (SISTEMA DE GESTÃO DE OBRAS - FUNDO CLARO)
+# ÁREA LOGADA (SISTEMA DE GESTÃO - FUNDO CLARO LIMPO)
 # ==========================================
 else:
+    # Mudar dinamicamente os estilos para a área interna clara
+    st.markdown("""
+        <style>
+        .stApp { background-color: #f8f9fa !important; }
+        div[data-testid="stMarkdownContainer"] p, label, .stMarkdown, h1, h2, h3 { color: #222222 !important; }
+        </style>
+    """, unsafe_allow_html=True)
+
     col_logo, col_user = st.columns([2, 1.5])
     with col_logo:
-        st.markdown("<h3 style='color:#1a202c; margin:0;'>Smarthome SPNOS</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='margin:0; font-weight:bold;'>🔷 Smarthome SPNOS</h3>", unsafe_allow_html=True)
     with col_user:
         user_clean = st.session_state.usuario_logado.split('@')[0]
-        st.write(f"<div style='text-align: right; font-size: 13px; color: #4a5568;'>{st.session_state.usuario_logado} &nbsp;|&nbsp; <a href='javascript:window.location.reload();' style='color:#006ce6; text-decoration:none;'>Sair</a></div>", unsafe_allow_html=True)
-        if st.button("Sair da Conta", key="act_logout"):
+        st.write(f"<div style='text-align: right; font-size: 13px; color: #555555;'>{st.session_state.usuario_logado}</div>", unsafe_allow_html=True)
+        if st.button("Sair da Conta ➔", key="act_logout", use_container_width=True):
             st.session_state.usuario_logado = None
             st.rerun()
             
@@ -194,7 +182,7 @@ else:
             st.session_state.ap_selecionado = None
             st.rerun()
             
-        st.markdown(f"<h1 style='color:#1a202c; margin-bottom:0;'>{ap}</h1>", unsafe_allow_html=True)
+        st.markdown(f"<h1 style='margin-bottom:0;'>{ap}</h1>", unsafe_allow_html=True)
         
         total_t = len(ap_info["tarefas"])
         concluidas_t = sum(1 for t in ap_info["tarefas"] if t["feita"])
@@ -245,12 +233,12 @@ else:
             st.session_state.obra_selecionada = None
             st.rerun()
             
-        st.markdown(f"<h1 style='color:#1a202c; margin-bottom:0;'>{obra}</h1>", unsafe_allow_html=True)
+        st.markdown(f"<h1 style='margin-bottom:0;'>{obra}</h1>", unsafe_allow_html=True)
         st.markdown(f"<div class='subtext' style='margin-bottom:15px;'>{len(obra_info['apartamentos'])} apartamento(s)</div>", unsafe_allow_html=True)
         
         col_ap_in, col_ap_btn = st.columns([4, 1])
         with col_ap_in:
-            novo_ap = st.text_input("Nome do apartamento (ex: Bloco A · 3ºD)", key="new_ap_input", label_visibility="collapsed", placeholder="Nome do apartamento (ex: Bloco A · 3ºD)")
+            novo_ap = st.text_input("Nome do apartamento...", key="new_ap_input", label_visibility="collapsed", placeholder="Nome do apartamento (ex: Bloco A · 3ºD)")
         with col_ap_btn:
             if st.button("＋ Novo", use_container_width=True):
                 if novo_ap and novo_ap not in obra_info["apartamentos"]:
@@ -266,7 +254,7 @@ else:
             with col_icon:
                 st.markdown("<h3 style='margin:0;'>🏢</h3>", unsafe_allow_html=True)
             with col_info:
-                st.markdown(f"<b style='color:#1a202c;'>{ap_nome}</b>", unsafe_allow_html=True)
+                st.markdown(f"<b>{ap_nome}</b>", unsafe_allow_html=True)
                 st.markdown(f"<div class='subtext'>{ap_detalhes['data']}</div>", unsafe_allow_html=True)
             with col_status:
                 cor = "#006ce6" if ap_detalhes['estado'] == "Concluída" else "#e69500"
@@ -277,14 +265,14 @@ else:
                     st.rerun()
             st.markdown('</div>', unsafe_allow_html=True)
 
-    # ECRÃ 1: LISTAGEM GERAL
+    # ECRÃ 1: LISTAGEM GERAL DE OBRAS
     else:
-        st.markdown("<h1 style='color:#1a202c; margin-bottom:0;'>Obras</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='color:#718096; margin-bottom:20px;'>Cada obra (ex: Terramar) contém os seus apartamentos.</p>", unsafe_allow_html=True)
+        st.markdown("<h1 style='margin-bottom:0;'>Obras</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='color:#555555; margin-bottom:20px;'>Cada obra contém os seus respetivos apartamentos.</p>", unsafe_allow_html=True)
         
         col_in, col_btn = st.columns([4, 1])
         with col_in:
-            nova_obra_nome = st.text_input("Nome da obra", key="new_obra_input", label_visibility="collapsed", placeholder="Nome da obra (ex: Terramar)")
+            nova_obra_nome = st.text_input("Nome da obra...", key="new_obra_input", label_visibility="collapsed", placeholder="Nome da obra (ex: Terramar)")
         with col_btn:
             if st.button("＋ Nova obra", use_container_width=True):
                 if nova_obra_nome and nova_obra_nome not in st.session_state.obras_data:
@@ -300,7 +288,7 @@ else:
             with col_icon:
                 st.markdown("<h3 style='margin:0;'>🏗️</h3>", unsafe_allow_html=True)
             with col_txt:
-                st.markdown(f"<b style='color:#1a202c;'>{nome_obra}</b>", unsafe_allow_html=True)
+                st.markdown(f"<b>{nome_obra}</b>", unsafe_allow_html=True)
                 st.markdown(f"<div class='subtext'>Modificado por {info_obra['modificado_por']} · {info_obra['data_modificacao']}</div>", unsafe_allow_html=True)
             with col_arrow:
                 if st.button("➔", key=f"view_{nome_obra}"):

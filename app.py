@@ -19,7 +19,6 @@ if 'usuarios' not in st.session_state:
 if 'usuario_logado' not in st.session_state:
     st.session_state.usuario_logado = None
 
-# Inicialização da Base de Dados de Obras Dinâmica
 if 'obras' not in st.session_state:
     st.session_state.obras = {
         "Apartamento 302 - Bloco A": {
@@ -55,80 +54,138 @@ if 'obras' not in st.session_state:
 # --- LÓGICA DE INTERFACE (Ecrãs) ---
 # ==========================================
 
-# --- 1. ECRÃ DE LOGIN ---
+# --- 1. ECRÃ DE LOGIN (ESTILO MINIMALISTA) ---
 if st.session_state.usuario_logado is None:
     
-    # CSS Customizado para o Login
+    # CSS Minimalista: Fundo limpo, cantos suaves e tons neutros
     st.markdown("""
         <style>
-        .stApp { background-color: #0084d6 !important; }
+        /* Fundo geral limpo e cinza ultra-claro */
+        .stApp {
+            background-color: #fafafa !important;
+        }
         div[data-testid="stHeader"] { display: none !important; }
         footer { display: none !important; }
         
+        /* Cabeçalho Minimalista */
         .header-container {
             text-align: center;
-            margin-top: 3rem;
-            margin-bottom: 2rem;
-            color: #ffffff;
+            margin-top: 4rem;
+            margin-bottom: 1.5rem;
         }
-        .header-container h1 { font-weight: bold; font-size: 32px; color: #ffffff !important; }
-        .header-container p { font-size: 15px; opacity: 0.9; color: #ffffff !important; }
+        .header-container h1 {
+            font-weight: 300;
+            font-size: 28px;
+            color: #2d3748 !important;
+            letter-spacing: -0.5px;
+        }
+        .header-container p {
+            font-size: 14px;
+            color: #718096 !important;
+            margin-top: -5px;
+        }
         
-        label, div[data-testid="stMarkdownContainer"] p { color: #4a5568 !important; font-weight: 500 !important; }
+        /* Inputs elegantes */
+        label, div[data-testid="stMarkdownContainer"] p {
+            color: #4a5568 !important;
+            font-weight: 500 !important;
+            font-size: 14px;
+        }
         div[data-testid="stTextInput"] input {
-            background-color: #ffffff !important; color: #222222 !important;
-            border: 1px solid #dcdfe6 !important; border-radius: 8px !important; height: 45px !important;
+            background-color: #ffffff !important;
+            color: #2d3748 !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 6px !important;
+            height: 42px !important;
+            transition: all 0.2s ease;
         }
+        div[data-testid="stTextInput"] input:focus {
+            border-color: #4a5568 !important;
+            box-shadow: none !important;
+        }
+        
+        /* Botão Principal discreto */
         div.stButton > button {
-            background-color: #006ce6 !important; color: #ffffff !important;
-            border-radius: 12px !important; border: none !important; height: 50px !important;
-            width: 100% !important; font-weight: bold !important; font-size: 16px !important; margin-top: 10px !important;
+            background-color: #2d3748 !important;
+            color: #ffffff !important;
+            border-radius: 6px !important;
+            border: none !important;
+            height: 42px !important;
+            width: 100% !important;
+            font-weight: 500 !important;
+            font-size: 14px !important;
+            margin-top: 15px !important;
+            transition: background 0.2s;
         }
-        div.stButton > button:hover { background-color: #005bb5 !important; }
-        .forgot-password { text-align: center; margin-top: 15px; font-size: 14px; color: #ecf0f1 !important; }
+        div.stButton > button:hover {
+            background-color: #1a202c !important;
+            color: #ffffff !important;
+        }
+        
+        /* Abas Estilizadas */
+        div[data-testid="stTabs"] button {
+            font-size: 14px !important;
+            color: #718096 !important;
+        }
+        div[data-testid="stTabs"] button[aria-selected="true"] {
+            color: #2d3748 !important;
+            font-weight: 600;
+        }
+        
+        .forgot-password {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #a0aec0 !important;
+            cursor: pointer;
+        }
         </style>
     """, unsafe_allow_html=True)
 
     st.markdown("""
         <div class="header-container">
             <h1>Smarthome SPNOS</h1>
-            <p>Acede à tua área de obras e checklists</p>
+            <p>Plataforma de Gestão Técnica</p>
         </div>
     """, unsafe_allow_html=True)
 
-    aba_login, aba_registro = st.tabs(["         Entrar         ", "         Registar         "])
+    # Centralizar o formulário no ecrã de forma limpa
+    col_central, _ = st.columns([1, 0.01]) # Truque para manter o alinhamento focado
     
-    with aba_login:
-        with st.form(key="formulario_login", clear_on_submit=False):
-            email_input = st.text_input("Email", placeholder="Insira o seu email", key="login_email")
-            pass_input = st.text_input("Palavra-passe", type="password", placeholder="Insira a sua password", key="login_pass")
-            submetido = st.form_submit_button("Entrar", use_container_width=True)
+    with col_central:
+        aba_login, aba_registro = st.tabs(["Entrar", "Criar Conta"])
+        
+        with aba_login:
+            with st.form(key="formulario_login", clear_on_submit=False):
+                email_input = st.text_input("Email", placeholder="nome@exemplo.pt", key="login_email")
+                pass_input = st.text_input("Palavra-passe", type="password", placeholder="••••••••", key="login_pass")
+                submetido = st.form_submit_button("Aceder ao Painel", use_container_width=True)
+                
+                if submetido:
+                    if email_input in st.session_state.usuarios and st.session_state.usuarios[email_input] == pass_input:
+                        st.session_state.usuario_logado = email_input
+                        st.rerun()
+                    else:
+                        st.error("Credenciais inválidas.")
+                        
+            st.markdown("<p class='forgot-password'>Recuperar palavra-passe</p>", unsafe_allow_html=True)
             
-            if submetido:
-                if email_input in st.session_state.usuarios and st.session_state.usuarios[email_input] == pass_input:
-                    st.session_state.usuario_logado = email_input
-                    st.rerun()
+        with aba_registro:
+            novo_email = st.text_input("Email Profissional", placeholder="nome@parceiros.nos.pt", key="reg_email")
+            nova_pass = st.text_input("Definir Palavra-passe", type="password", placeholder="Mínimo 4 caracteres", key="reg_pass")
+            
+            if st.button("Registar Técnico", use_container_width=True):
+                if not novo_email or not nova_pass:
+                    st.error("Por favor, preencha todos os campos.")
+                elif novo_email in st.session_state.usuarios:
+                    st.error("Este utilizador já se encontra registado.")
                 else:
-                    st.error("Email ou Palavra-passe incorretos.")
-                    
-        st.markdown("<p class='forgot-password'>Esqueci a password</p>", unsafe_allow_html=True)
-        
-    with aba_registro:
-        novo_email = st.text_input("Novo Email", placeholder="exemplo@parceiros.nos.pt", key="reg_email")
-        nova_pass = st.text_input("Criar Palavra-passe", type="password", placeholder="Mínimo 4 caracteres", key="reg_pass")
-        
-        if st.button("Criar Conta", use_container_width=True):
-            if not novo_email or not nova_pass:
-                st.error("Preencha todos os campos.")
-            elif novo_email in st.session_state.usuarios:
-                st.error("Este email já está registado.")
-            else:
-                st.session_state.usuarios[novo_email] = nova_pass
-                st.success("Conta criada! Alterne para a aba 'Entrar'.")
+                    st.session_state.usuarios[novo_email] = nova_pass
+                    st.success("Registo efetuado com sucesso!")
 
 # --- 2. ÁREA PROTEGIDA (GESTÃO DE OBRAS E CHECKLISTS) ---
 else:
-    # Estilização do Painel de Trabalho
+    # Estilização do Painel de Trabalho (Mantém-se limpo e profissional)
     st.markdown("""
         <style>
         .stApp { background-color: #f8f9fa !important; }
@@ -146,7 +203,6 @@ else:
     with st.sidebar:
         st.header("⚙️ Painel de Administração")
         
-        # Separador 1: Criar Nova Obra
         st.subheader("➕ Nova Obra / Apartamento")
         with st.form("criar_obra_form", clear_on_submit=True):
             nova_obra_nome = st.text_input("Nome do Apartamento", placeholder="Ex: Apartamento 501 - Bloco B")
@@ -159,7 +215,6 @@ else:
             
             if botao_criar and nova_obra_nome:
                 if nova_obra_nome not in st.session_state.obras:
-                    # Processar linhas do text_area para criar dicionário da checklist
                     lista_t = [t.strip() for t in tarefas_texto.split("\n") if t.strip()]
                     dict_checklist = {t: False for t in lista_t}
                     
@@ -174,12 +229,10 @@ else:
 
         st.divider()
         
-        # Separador 2: Modificar / Eliminar Obras Existentes
         if st.session_state.obras:
             st.subheader("📝 Modificar / Eliminar")
             obra_selecionada = st.selectbox("Escolha a Obra", list(st.session_state.obras.keys()))
             
-            # Adicionar tarefa à obra selecionada
             nova_tarefa_avulsa = st.text_input("Adicionar tarefa a esta obra", placeholder="Ex: Sincronizar alarmes")
             if st.button("Adicionar Tarefa", use_container_width=True) and nova_tarefa_avulsa:
                 st.session_state.obras[obra_selecionada]["checklist"][nova_tarefa_avulsa] = False

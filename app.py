@@ -130,7 +130,6 @@ if st.session_state.usuario_logado is None:
     # Abas Entrar / Registar
     aba_login, aba_registro = st.tabs(["         Entrar         ", "         Registar         "])
     
-    # --- BLOCO CORRIGIDO COM FORMULÁRIO ---
     with aba_login:
         with st.form(key="formulario_login", clear_on_submit=False):
             email_input = st.text_input("Email", placeholder="Insira o seu email", key="login_email")
@@ -188,7 +187,7 @@ else:
             st.rerun()
             
     st.write(f"*Sessão iniciada como: {st.session_state.usuario_logado}*")
-    st.hr()
+    st.divider()  # CORRIGIDO: Linha separadora nativa do Streamlit
 
     st.title("📋 Gestão de Obras e Intervenções")
     st.write("Seleciona e atualiza o estado dos apartamentos e valida as tarefas de domótica em curso.")
@@ -241,7 +240,4 @@ else:
                     value=concluida, 
                     key=chave_tarefa
                 )
-                st.session_state.obras[nome_obra]["checklist"][tarefa] = status_tarefa
-            
-            st.markdown("<br>", unsafe_allow_html=True)
-            st.divider()
+                st.session_state.obras[nome_obra]

@@ -1,5 +1,4 @@
 import streamlit as st
-import pandas as pd
 
 # --- CONFIGURAÇÃO INICIAL DA PÁGINA ---
 st.set_page_config(
@@ -168,11 +167,16 @@ else:
         label, div[data-testid="stMarkdownContainer"] p { color: #333333 !important; }
         .obra-card {
             background-color: #ffffff;
-            padding: 20px;
+            padding: 15px 20px;
             border-radius: 10px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            margin-bottom: 25px;
+            margin-top: 15px;
+            margin-bottom: 10px;
             border-left: 5px solid #0084d6;
+        }
+        .obra-card h3 {
+            margin: 0px !important;
+            color: #1a202c !important;
         }
         </style>
     """, unsafe_allow_html=True)
@@ -187,57 +191,60 @@ else:
             st.rerun()
             
     st.write(f"*Sessão iniciada como: {st.session_state.usuario_logado}*")
-    st.divider()  # CORRIGIDO: Linha separadora nativa do Streamlit
+    st.divider()
 
     st.title("📋 Gestão de Obras e Intervenções")
     st.write("Seleciona e atualiza o estado dos apartamentos e valida as tarefas de domótica em curso.")
+    st.write(" ")
 
     # --- LISTAGEM DE OBRAS ---
     for nome_obra, dados in st.session_state.obras.items():
         
-        # Container visual para cada obra
-        with st.container():
-            st.markdown(f"""
-            <div class="obra-card">
-                <h3>🏠 {nome_obra}</h3>
-            </div>
-            """, unsafe_allow_html=True)
+        # 1. Título do Apartamento dentro do Card Estilizado
+        st.markdown(f"""
+        <div class="obra-card">
+            <h3>🏠 {nome_obra}</h3>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # 2. Colunas para o Estado e Progresso
+        col_estado, col_progresso = st.columns([1, 1])
+        
+        with col_estado:
+            lista_estados = ["Pendente", "Em Progresso", "Concluída"]
+            indice_atual = lista_estados.index(dados["estado"]) if dados["estado"] in lista_estados else 0
             
-            col_estado, col_progresso = st.columns([1, 1])
-            
-            with col_estado:
-                # Seletor de Estado da Obra
-                lista_estados = ["Pendente", "Em Progresso", "Concluída"]
-                indice_atual = lista_estados.index(dados["estado"])
-                
-                novo_estado = st.selectbox(
-                    f"Estado da Obra",
-                    options=lista_estados,
-                    index=indice_atual,
-                    key=f"estado_{nome_obra}"
-                )
-                st.session_state.obras[nome_obra]["estado"] = novo_estado
+            novo_estado = st.selectbox(
+                "Estado da Obra",
+                options=lista_estados,
+                index=indice_atual,
+                key=f"estado_{nome_obra}"
+            )
+            st.session_state.obras[nome_obra]["estado"] = novo_estado
 
-            with col_progresso:
-                # Cálculo simples de progresso da checklist
-                total_tarefas = len(dados["checklist"])
-                tarefas_concluidas = sum(1 for concluida in dados["checklist"].values() if concluida)
-                percentagem = tarefas_concluidas / total_tarefas if total_tarefas > 0 else 0.0
-                
-                st.write("Progresso técnico:")
-                st.progress(percentagem)
-                st.caption(f"{tarefas_concluidas} de {total_tarefas} tarefas validadas.")
-
-            # --- CHECKLIST DA OBRA ---
-            st.markdown("**Checklist de Instalação:**")
+        with col_progresso:
+            total_tarefas = len(dados["checklist"])
+            tarefas_concluidas = sum(1 for concluida in dados["checklist"].values() if concluida)
+            percentagem = tarefas_concluidas / total_tarefas if total_tarefas > 0 else 0.0
             
-            # Iterar pelas tarefas da checklist
-            for tarefa, concluida in dados["checklist"].items():
-                chave_tarefa = f"chk_{nome_obra}_{tarefa}"
-                
-                status_tarefa = st.checkbox(
-                    tarefa, 
-                    value=concluida, 
-                    key=chave_tarefa
-                )
-                st.session_state.obras[nome_obra]
+            st.write("Progresso técnico:")
+            st.progress(percentagem)
+            st.caption(f"{tarefas_concluidas} de {total_tarefas} tarefas validadas.")
+
+        # 3. Secção da Checklist
+        st.markdown("**Checklist de Instalação:**")
+        
+        tarefas = list(dados["checklist"].keys())
+        for tarefa in tarefas:
+            concluida = dados["checklist"][tarefa]
+            chave_tarefa = f"chk_{nome_obra}_{tarefa}"
+            
+            status_tarefa = st.checkbox(
+                tarefa, 
+                value=concluida, 
+                key=chave_tarefa
+            )
+            st.session_state.obras[nome_obra]["checklist"][tarefa] = status_tarefa
+        
+        # Linha divisória limpa entre apartamentos
+        st.divider()

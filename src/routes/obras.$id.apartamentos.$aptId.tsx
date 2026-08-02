@@ -36,7 +36,6 @@ function ApartamentoDetail() {
   const [carregando, setCarregando] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
     (async () => {
       const [{ data: a, error: e1 }, { data: it, error: e2 }] = await Promise.all([
         supabase.from("apartamentos").select("id, nome, estado, obra_id, modificado_em, modificado_por").eq("id", aptId).maybeSingle(),

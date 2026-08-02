@@ -1,7 +1,6 @@
-import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
 import { AppHeader } from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,12 +16,19 @@ type Apt = { id: string; nome: string; estado: Estado; obra_id: string; modifica
 type Item = { id: string; descricao: string; concluido: boolean; ordem: number; modificado_em: string | null; modificado_por: string | null };
 
 export const Route = createFileRoute("/obras/$id/apartamentos/$aptId")({
+  head: () => ({
+    meta: [
+      { title: "Checklist do apartamento · Smarthome SPNOS" },
+      { name: "description", content: "Estado do apartamento e checklist de tarefas de instalação de domótica." },
+      { property: "og:title", content: "Checklist do apartamento · Smarthome SPNOS" },
+      { property: "og:description", content: "Estado do apartamento e checklist de tarefas de instalação de domótica." },
+    ],
+  }),
   component: ApartamentoDetail,
 });
 
 function ApartamentoDetail() {
   const { id, aptId } = Route.useParams();
-  const { user, loading } = useAuth();
   const [apt, setApt] = useState<Apt | null>(null);
   const [items, setItems] = useState<Item[]>([]);
   const [nomes, setNomes] = useState<Map<string, string>>(new Map());
@@ -30,7 +36,6 @@ function ApartamentoDetail() {
   const [carregando, setCarregando] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
     (async () => {
       const [{ data: a, error: e1 }, { data: it, error: e2 }] = await Promise.all([
         supabase.from("apartamentos").select("id, nome, estado, obra_id, modificado_em, modificado_por").eq("id", aptId).maybeSingle(),
@@ -49,10 +54,7 @@ function ApartamentoDetail() {
       setNomes(await getNomes([aptData?.modificado_por, ...itemsData.map((i) => i.modificado_por)]));
       setCarregando(false);
     })();
-  }, [aptId, user]);
-
-  if (loading) return null;
-  if (!user) return <Navigate to="/login" />;
+  }, [aptId]);
 
   async function alterarEstado(estado: Estado) {
     if (!apt) return;

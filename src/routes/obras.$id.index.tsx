@@ -1,7 +1,6 @@
-import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
 import { AppHeader } from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,12 +26,19 @@ type Obra = { id: string; nome: string };
 type Apartamento = { id: string; nome: string; estado: Estado; modificado_em: string | null; modificado_por: string | null };
 
 export const Route = createFileRoute("/obras/$id/")({
+  head: () => ({
+    meta: [
+      { title: "Apartamentos da obra · Smarthome SPNOS" },
+      { name: "description", content: "Apartamentos desta obra e o estado de cada instalação de domótica." },
+      { property: "og:title", content: "Apartamentos da obra · Smarthome SPNOS" },
+      { property: "og:description", content: "Apartamentos desta obra e o estado de cada instalação de domótica." },
+    ],
+  }),
   component: ObraDetail,
 });
 
 function ObraDetail() {
   const { id } = Route.useParams();
-  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [obra, setObra] = useState<Obra | null>(null);
   const [apartamentos, setApartamentos] = useState<Apartamento[] | null>(null);
@@ -43,7 +49,6 @@ function ObraDetail() {
   const [editNome, setEditNome] = useState("");
 
   useEffect(() => {
-    if (!user) return;
     (async () => {
       const [{ data: o, error: e1 }, { data: a, error: e2 }] = await Promise.all([
         supabase.from("obras").select("id, nome").eq("id", id).maybeSingle(),
@@ -60,10 +65,7 @@ function ObraDetail() {
       setApartamentos(list);
       setNomes(await getNomes(list.map((x) => x.modificado_por)));
     })();
-  }, [id, user]);
-
-  if (loading) return null;
-  if (!user) return <Navigate to="/login" />;
+  }, [id]);
 
   async function criarApartamento(e: React.FormEvent) {
     e.preventDefault();

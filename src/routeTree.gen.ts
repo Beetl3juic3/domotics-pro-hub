@@ -9,24 +9,12 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ObrasIndexRouteImport } from './routes/obras.index'
 import { Route as ObrasIdRouteImport } from './routes/obras.$id'
 import { Route as ObrasIdIndexRouteImport } from './routes/obras.$id.index'
 import { Route as ObrasIdApartamentosAptIdRouteImport } from './routes/obras.$id.apartamentos.$aptId'
 
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -56,8 +44,6 @@ const ObrasIdApartamentosAptIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/login': typeof LoginRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/obras/$id': typeof ObrasIdRouteWithChildren
   '/obras/': typeof ObrasIndexRoute
   '/obras/$id/': typeof ObrasIdIndexRoute
@@ -65,8 +51,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/login': typeof LoginRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/obras': typeof ObrasIndexRoute
   '/obras/$id': typeof ObrasIdIndexRoute
   '/obras/$id/apartamentos/$aptId': typeof ObrasIdApartamentosAptIdRoute
@@ -74,8 +58,6 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/login': typeof LoginRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/obras/$id': typeof ObrasIdRouteWithChildren
   '/obras/': typeof ObrasIndexRoute
   '/obras/$id/': typeof ObrasIdIndexRoute
@@ -85,25 +67,15 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/login'
-    | '/reset-password'
     | '/obras/$id'
     | '/obras/'
     | '/obras/$id/'
     | '/obras/$id/apartamentos/$aptId'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/login'
-    | '/reset-password'
-    | '/obras'
-    | '/obras/$id'
-    | '/obras/$id/apartamentos/$aptId'
+  to: '/' | '/obras' | '/obras/$id' | '/obras/$id/apartamentos/$aptId'
   id:
     | '__root__'
     | '/'
-    | '/login'
-    | '/reset-password'
     | '/obras/$id'
     | '/obras/'
     | '/obras/$id/'
@@ -112,28 +84,12 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  LoginRoute: typeof LoginRoute
-  ResetPasswordRoute: typeof ResetPasswordRoute
   ObrasIdRoute: typeof ObrasIdRouteWithChildren
   ObrasIndexRoute: typeof ObrasIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -187,21 +143,9 @@ const ObrasIdRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  LoginRoute: LoginRoute,
-  ResetPasswordRoute: ResetPasswordRoute,
   ObrasIdRoute: ObrasIdRouteWithChildren,
   ObrasIndexRoute: ObrasIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

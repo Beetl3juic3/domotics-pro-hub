@@ -1,7 +1,6 @@
-import { createFileRoute, Link, Navigate, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
 import { AppHeader } from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,11 +23,18 @@ import {
 type Obra = { id: string; nome: string; modificado_em: string | null; modificado_por: string | null };
 
 export const Route = createFileRoute("/obras/")({
+  head: () => ({
+    meta: [
+      { title: "Obras · Smarthome SPNOS" },
+      { name: "description", content: "Lista de obras de domótica com apartamentos e checklists de instalação." },
+      { property: "og:title", content: "Obras · Smarthome SPNOS" },
+      { property: "og:description", content: "Lista de obras de domótica com apartamentos e checklists de instalação." },
+    ],
+  }),
   component: ObrasList,
 });
 
 function ObrasList() {
-  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [obras, setObras] = useState<Obra[] | null>(null);
   const [nomes, setNomes] = useState<Map<string, string>>(new Map());
@@ -38,7 +44,6 @@ function ObrasList() {
   const [editNome, setEditNome] = useState("");
 
   useEffect(() => {
-    if (!user) return;
     supabase
       .from("obras")
       .select("id, nome, modificado_em, modificado_por")
@@ -51,18 +56,15 @@ function ObrasList() {
           setNomes(await getNomes(list.map((o) => o.modificado_por)));
         }
       });
-  }, [user]);
-
-  if (loading) return null;
-  if (!user) return <Navigate to="/login" />;
+  }, []);
 
   async function criarObra(e: React.FormEvent) {
     e.preventDefault();
-    if (!novo.trim() || !user) return;
+    if (!novo.trim()) return;
     setCriando(true);
     const { data, error } = await supabase
       .from("obras")
-      .insert({ nome: novo.trim(), user_id: user.id })
+      .insert({ nome: novo.trim() })
       .select("id")
       .single();
     setCriando(false);

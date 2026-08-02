@@ -1,10 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { useAuth } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
-import { Cpu, LogOut } from "lucide-react";
+import { Cpu } from "lucide-react";
 
 export function AppHeader() {
-  const { user, signOut } = useAuth();
   return (
     <header className="border-b bg-card">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
@@ -14,12 +11,7 @@ export function AppHeader() {
           </span>
           Smarthome SPNOS
         </Link>
-        <div className="flex items-center gap-3">
-          <span className="hidden text-sm text-muted-foreground sm:inline">{user?.email}</span>
-          <Button variant="ghost" size="sm" onClick={() => signOut()}>
-            <LogOut className="mr-2 h-4 w-4" /> Sair
-          </Button>
-        </div>
+        <span className="text-sm text-muted-foreground">Gestão de Obras</span>
       </div>
     </header>
   );
